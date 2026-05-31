@@ -2,260 +2,138 @@
 <html lang="sv">
 <head>
     <meta charset="UTF-8">
-    <title>Stensjö Vård - Offert & Kalkylator V4</title>
+    <title>Stensjö Vård AB — Master Offertsnurra V5 (Pro)</title>
     <style>
-        body { font-family: Arial, sans-serif; background-color: #f1f5f9; color: #1e293b; margin: 0; padding: 20px; }
-        .container { max-width: 1000px; margin: 0 auto; background: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-        h1 { color: #0f172a; margin-top: 0; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 20px; }
-        .section { background: #f8fafc; padding: 20px; border-radius: 6px; border: 1px solid #e2e8f0; }
-        h2 { font-size: 16px; margin-top: 0; color: #1e293b; border-left: 4px solid #16a34a; padding-left: 8px; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; background-color: #f8fafc; color: #0f172a; margin: 0; padding: 24px; line-height: 1.5; }
+        .container { max-width: 1280px; margin: 0 auto; background: #ffffff; padding: 32px; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
+        
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f1f5f9; padding-bottom: 20px; margin-bottom: 25px; }
+        .header h1 { font-size: 24px; margin: 0; color: #1e3a8a; display: flex; align-items: center; gap: 10px; }
+        .badge { background: #e0f2fe; color: #0369a1; font-size: 12px; font-weight: bold; padding: 4px 10px; border-radius: 9999px; }
+        
+        .grid { display: grid; grid-template-columns: 1fr 1.1fr; gap: 35px; }
+        
+        /* Moduler och Layout */
+        .section { background: #ffffff; padding: 24px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 25px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
+        .section-title { font-size: 15px; font-weight: 700; margin-top: 0; margin-bottom: 18px; color: #1e293b; border-left: 4px solid #3b82f6; padding-left: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+        
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         .form-group { margin-bottom: 15px; }
-        label { display: block; font-size: 13px; font-weight: bold; margin-bottom: 5px; color: #475569; }
-        input[type="number"] { width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box; }
-        .checkbox-group { display: flex; align-items: center; gap: 10px; margin-top: 15px; }
-        .btn-print { background-color: #1e3a8a; color: white; padding: 12px 20px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; width: 100%; font-size: 16px; margin-bottom: 20px; }
-        .btn-print:hover { background-color: #172554; }
         
-        /* Resultattabell */
-        .res-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        .res-table td { padding: 10px; border-bottom: 1px solid #e2e8f0; font-size: 14px; }
-        .res-table tr.total { font-weight: bold; background: #f1f5f9; }
-        .tb-box { background: #1e293b; color: white; padding: 20px; border-radius: 6px; margin-top: 20px; text-align: center; }
-        .tb-box h3 { margin: 0; font-size: 14px; color: #94a3b8; }
-        .tb-box .val { font-size: 28px; font-weight: bold; margin: 5px 0; color: #34d399; }
+        label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 6px; color: #475569; }
+        input[type="number"], select { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; box-sizing: border-box; background-color: #ffffff; }
         
-        /* Print-styling för PDF */
+        .checkbox-card { display: flex; align-items: center; gap: 12px; background: #fff5f5; border: 1px solid #fee2e2; padding: 12px; border-radius: 6px; margin-top: 15px; }
+        .checkbox-card input { width: 18px; height: 18px; cursor: pointer; }
+        
+        /* Höger kolumn: Resultat och live-optimering */
+        .result-panel { background: #ffffff; border: 2px solid #1e3a8a; border-radius: 10px; padding: 24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); position: sticky; top: 20px; }
+        
+        .res-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        .res-table td { padding: 10px 0; border-bottom: 1px solid #f1f5f9; font-size: 14px; color: #334155; }
+        .res-table tr.highlight-row { font-weight: 600; background: #f8fafc; }
+        .res-table tr.highlight-row td { padding: 12px 8px; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; }
+        
+        /* Optimizer Panel placerad längst ner till höger */
+        .optimization-box { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 20px; margin-top: 20px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); }
+        .optimization-title { font-size: 13px; font-weight: 700; color: #1e3a8a; margin-top: 0; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 0.5px; }
+        
+        .info-bubble { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; padding: 12px; border-radius: 6px; font-size: 12px; line-height: 1.4; margin-top: 12px; }
+        
+        /* Stora vinstlådan */
+        .summary-box { background: #0f172a; color: #ffffff; padding: 20px; border-radius: 8px; margin-top: 20px; text-align: center; }
+        .summary-box h4 { margin: 0; font-size: 12px; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; }
+        .summary-box .value { font-size: 32px; font-weight: 800; margin: 6px 0; color: #10b981; }
+        .summary-box .margin-text { font-size: 14px; color: #cbd5e1; font-weight: 500; }
+        
+        .btn-action { background-color: #1e3a8a; color: white; padding: 14px 24px; border: none; border-radius: 6px; font-weight: 700; cursor: pointer; width: 100%; font-size: 15px; display: block; text-align: center; margin-bottom: 15px; text-decoration: none; }
+        .btn-action:hover { background-color: #172554; }
+        
         @media print {
             body { background: white; padding: 0; }
-            .container { box-shadow: none; padding: 0; max-width: 100%; }
+            .container { border: none; box-shadow: none; padding: 0; }
             .grid { grid-template-columns: 1fr; }
-            .inputs-side, .btn-print { display: none; }
-            .section { border: none; background: white; padding: 0; }
-            .tb-box { background: #f1f5f9; color: #0f172a; border: 1px solid #cbd5e1; }
-            .tb-box .val { color: #16a34a; }
+            .left-inputs, .btn-action, .optimization-box { display: none !important; }
+            .result-panel { border: none; padding: 0; position: relative; }
+            .summary-box { background: #f1f5f9; color: #0f172a; border: 1px solid #cbd5e1; }
+            .summary-box .value { color: #111827; }
         }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>Stensjö Vård AB — Offertverktyg</h1>
+    <div class="header">
+        <h1>🌸 KLARA Master Offertsnurra Pro</h1>
+        <div style="text-align: right; font-size: 13px; color: #64748b; font-weight: 500;">Sandbox-läge (/pro)</div>
+    </div>
     
     <div class="grid">
-        <div class="inputs-side">
-            <button class="btn-print" onclick="window.print()">🖨️ Exportera & Skriv ut till PDF</button>
+        <div class="left-inputs">
             
             <div class="section">
-                <h2>1. Intäkt från Region (SKR)</h2>
-                <div class="form-group">
-                    <label>Timpris till kund (kr/h)</label>
-                    <input type="number" id="kundpris" value="770" oninput="calculate()">
-                </div>
-                <div class="form-group">
-                    <label>Totala arbetade timmar i månaden</label>
-                    <input type="number" id="timmar" value="172" oninput="calculate()">
+                <div class="section-title">1. Avtalsramar & Kundvillkor</div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Kundkategori</label>
+                        <select id="kund_kat">
+                            <option value="region" selected>Region (SKR-avtal 2026)</option>
+                            <option value="kommun">Kommun</option>
+                            <option value="privat">Privat</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Kompetensnivå</label>
+                        <select id="komp_niva">
+                            <option value="allman">Allmän SSK</option>
+                            <option value="spec">SSK Spec</option>
+                            <option value="ane_iva" selected>Spec ANE/IVA/OP/BM</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Baspris till kund (kr/tim)</label>
+                        <input type="number" id="base_kund" value="770" oninput="runCalculation()">
+                    </div>
+                    <div class="form-group">
+                        <label>Grundtimlön till konsult (kr/tim)</label>
+                        <input type="number" id="base_konsult" value="411" oninput="runCalculation()">
+                    </div>
                 </div>
             </div>
             
-            <div class="section" style="margin-top: 20px;">
-                <h2>2. Konsultlön & Löneväxling</h2>
-                <div class="form-group">
-                    <label>Grundtimlön till konsult (kr/h, inkl. semesterers.)</label>
-                    <input type="number" id="konsultlon" value="470" oninput="calculate()">
-                </div>
-                <div class="form-group">
-                    <label>Avdrag för Löneväxling (kr/månad)</label>
-                    <input type="number" id="lonevaxling" value="10000" oninput="calculate()">
-                </div>
-            </div>
-
-            <div class="section" style="margin-top: 20px;">
-                <h2>3. Resor & SITHS-kort (Rena utgifter)</h2>
-                <div class="form-group">
-                    <label>Antal körda mil totalt</label>
-                    <input type="number" id="mil" value="220" oninput="calculate()">
-                </div>
-                <div class="form-group">
-                    <label>Ersättning per mil (kr/mil)</label>
-                    <input type="number" id="krmil" value="18" oninput="calculate()">
-                </div>
-                <div class="form-group">
-                    <label>SITHS-kort engångskostnad (kr)</label>
-                    <input type="number" id="siths_engang" value="0" oninput="calculate()">
-                </div>
-                <div class="form-group">
-                    <label>SITHS-kort löpande månadskostnad (kr)</label>
-                    <input type="number" id="siths_lopande" value="0" oninput="calculate()">
+            <div class="section">
+                <div class="section-title">2. Importerade schematimmar</div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Vardag dag (06–19)</label>
+                        <input type="number" id="h_vd" value="116" oninput="runCalculation()">
+                    </div>
+                    <div class="form-group">
+                        <label>Vardag kväll (19–22) (+20 kr/h OB)</label>
+                        <input type="number" id="h_vk" value="24" oninput="runCalculation()">
+                    </div>
+                    <div class="form-group">
+                        <label>Helg dag (06–19) (+50 kr/h OB)</label>
+                        <input type="number" id="h_hd" value="24" oninput="runCalculation()">
+                    </div>
+                    <div class="form-group">
+                        <label>Helg kväll (19–22) (+50 kr/h OB)</label>
+                        <input type="number" id="h_hk" value="12" oninput="runCalculation()">
+                    </div>
+                    <div class="form-group">
+                        <label>Vardag natt (22–06)</label>
+                        <input type="number" id="h_vn" value="0" oninput="runCalculation()">
+                    </div>
+                    <div class="form-group">
+                        <label>Helg natt (22–06)</label>
+                        <input type="number" id="h_hn" value="0" oninput="runCalculation()">
+                    </div>
                 </div>
             </div>
 
-            <div class="section" style="margin-top: 20px;">
-                <h2>4. Sjukdom & SKR-Vite Simulator</h2>
-                <div class="form-group">
-                    <label>Antal simulerade sjuktimmar (1 pass = 8.6h)</label>
-                    <input type="number" id="sjuktimmar" value="0" oninput="calculate()">
-                </div>
-                <div class="checkbox-group">
-                    <input type="checkbox" id="skr_vite" onchange="calculate()">
-                    <label for="skr_vite">Aktivera SKR Fast Vite (Tillfälle 4+): 10 000 kr</label>
-                </div>
-            </div>
-        </div>
-        
-        <div class="result-side">
-            <div class="section" style="background: white;">
-                <h2 style="font-size: 18px;">Ekonomisk Specifikation — September 2026</h2>
-                <p style="font-size: 12px; color: #64748b; margin-top: -5px;">Genererad i realtid. Justera värdena till vänster.</p>
-                
-                <table class="res-table">
-                    <tr>
-                        <td>Totala intäkter från kund</td>
-                        <td style="text-align: right; font-weight: bold; color: #16a34a;" id="out_intakt">0 kr</td>
-                    </tr>
-                    <tr>
-                        <td>Konsultens bruttolön <span style="font-size:11px; color:#64748b;">(inkl. ev. sjuklön, efter löneväxling)</span></td>
-                        <td style="text-align: right;" id="out_brutto">0 kr</td>
-                    </tr>
-                    <tr>
-                        <td>Arbetsgivaravgifter (31,42%)</td>
-                        <td style="text-align: right;" id="out_sa">0 kr</td>
-                    </tr>
-                    <tr>
-                        <td>Total Tjänstepension <span style="font-size:11px; color:#16a34a;">(Ordinarie + Löneväxling + 6% bonus)</span></td>
-                        <td style="text-align: right;" id="out_pension">0 kr</td>
-                    </tr>
-                    <tr>
-                        <td>Särskild löneskatt på pension (24,26%)</td>
-                        <td style="text-align: right;" id="out_slr">0 kr</td>
-                    </tr>
-                    <tr>
-                        <td>Skattefri milersättning (Utbetalas direkt)</td>
-                        <td style="text-align: right;" id="out_mil">0 kr</td>
-                    </tr>
-                    <tr id="row_siths" style="display:none;">
-                        <td>SITHS-kort (Kostnader)</td>
-                        <td style="text-align: right;" id="out_siths">0 kr</td>
-                    </tr>
-                    <tr id="row_vite" style="display:none; color:#b91c1c; font-weight:bold;">
-                        <td>SKR Fast Avtalsvite</td>
-                        <td style="text-align: right;" id="out_vite">0 kr</td>
-                    </tr>
-                    <tr class="total">
-                        <td>TOTAL SJÄLVKOSTNAD FÖR BOLAGET</td>
-                        <td style="text-align: right;" id="out_totalkostnad">0 kr</td>
-                    </tr>
-                </table>
-                
-                <div class="tb-box">
-                    <h3>KVARVARANDE TÄCKNINGSBIDRAG (VINST)</h3>
-                    <div class="val" id="out_tb">0 kr</div>
-                    <div style="font-size: 13px; color: #94a3b8;" id="out_marginal">Marginal: 0%</div>
-                </div>
-                
-                <div style="margin-top: 20px; padding: 10px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 4px; font-size: 12px; color: #14532d;" id="box_pension_info">
-                    <strong>Pensionsinfo:</strong> Avsättningen innehåller din ordinarie ITP-pension beräknad på lönen innan löneväxling, samt din löneväxling på 10 000 kr förstärkt med +6% extra bonus (10 600 kr totalt).
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<script>
-function calculate() {
-    // Hämta inputs
-    var kundpris = parseFloat(document.getElementById('kundpris').value) || 0;
-    var timmar = parseFloat(document.getElementById('timmar').value) || 0;
-    var konsultlon = parseFloat(document.getElementById('konsultlon').value) || 0;
-    var lonevaxling = parseFloat(document.getElementById('lonevaxling').value) || 0;
-    var mil = parseFloat(document.getElementById('mil').value) || 0;
-    var krmil = parseFloat(document.getElementById('krmil').value) || 0;
-    var siths_engang = parseFloat(document.getElementById('siths_engang').value) || 0;
-    var siths_lopande = parseFloat(document.getElementById('siths_lopande').value) || 0;
-    var sjuktimmar = parseFloat(document.getElementById('sjuktimmar').value) || 0;
-    var skr_vite_aktivt = document.getElementById('skr_vite').checked;
-
-    // 1. Beräkna arbetade timmar och intäkter
-    var arbetade_timmar = Math.max(0, timmar - sjuktimmar);
-    var total_intakt = arbetade_timmar * kundpris;
-
-    // 2. Beräkna lön och sjuklön
-    var grundlon_arbetad = arbetade_timmar * konsultlon;
-    
-    // Sjuklön: 1 pass (8h) karens, resten 80%
-    var sjuklon_timmar = Math.max(0, sjuktimmar - 8);
-    var sjuklon_belopp = sjuklon_timmar * (konsultlon * 0.8);
-    
-    var brutto_innan_lv = grundlon_arbetad + sjuklon_belopp;
-    var brutto_efter_lv = Math.max(0, brutto_innan_lv - lonevaxling);
-
-    // 3. Sociala avgifter
-    var sa = brutto_efter_lv * 0.3142;
-
-    // 4. Pension (ITP-trappan: 4.5% upp till 52125, 30% över. Baseras på brutto INNAN löneväxling)
-    var p_lag = Math.min(brutto_innan_lv, 52125) * 0.045;
-    var p_hog = Math.max(0, brutto_innan_lv - 52125) * 0.30;
-    var ordinarie_pension = p_lag + p_hog;
-    
-    // Löneväxlingsdel inklusive 6% bonus
-    var vaxlings_del = lonevaxling * 1.06;
-    var total_pension = ordinarie_pension + vaxlings_del;
-    var slr = total_pension * 0.2426;
-
-    // 5. Övriga utgifter
-    // Milersättning betalas bara för faktiska arbetade pass (räknar 8.6h per pass)
-    var arbetade_pass = Math.ceil(arbetade_timmar / 8.6);
-    var planerad_pass = Math.ceil(timmar / 8.6);
-    var faktiskt_mil = (arbetade_pass / planerad_pass) * mil;
-    if(timmar == 0 || arbetade_timmar == 0) faktiskt_mil = 0;
-    
-    var total_milersattning = faktiskt_mil * krmil;
-    var siths_total = siths_engang + siths_lopande;
-    
-    var fast_vite = skr_vite_aktivt ? 10000 : 0;
-
-    // 6. Totalsummering
-    var total_kostnad = brutto_efter_lv + sa + total_pension + slr + total_milersattning + siths_total + fast_vite;
-    var tb = total_intakt - total_kostnad;
-    var marginal = total_intakt > 0 ? (tb / total_intakt) * 100 : 0;
-
-    // Skriv ut resultat till skärmen
-    document.getElementById('out_intakt').innerText = Math.round(total_intakt).toLocaleString('sv-SE') + " kr";
-    document.getElementById('out_brutto').innerText = Math.round(brutto_efter_lv).toLocaleString('sv-SE') + " kr";
-    document.getElementById('out_sa').innerText = Math.round(sa).toLocaleString('sv-SE') + " kr";
-    document.getElementById('out_pension').innerText = Math.round(total_pension).toLocaleString('sv-SE') + " kr";
-    document.getElementById('out_slr').innerText = Math.round(slr).toLocaleString('sv-SE') + " kr";
-    document.getElementById('out_mil').innerText = Math.round(total_milersattning).toLocaleString('sv-SE') + " kr";
-    
-    if(siths_total > 0) {
-        document.getElementById('row_siths').style.display = '';
-        document.getElementById('out_siths').innerText = Math.round(siths_total).toLocaleString('sv-SE') + " kr";
-    } else {
-        document.getElementById('row_siths').style.display = 'none';
-    }
-
-    if(fast_vite > 0) {
-        document.getElementById('row_vite').style.display = '';
-        document.getElementById('out_vite').innerText = Math.round(fast_vite).toLocaleString('sv-SE') + " kr";
-    } else {
-        document.getElementById('row_vite').style.display = 'none';
-    }
-
-    document.getElementById('out_totalkostnad').innerText = Math.round(total_kostnad).toLocaleString('sv-SE') + " kr";
-    
-    var tb_element = document.getElementById('out_tb');
-    tb_element.innerText = Math.round(tb).toLocaleString('sv-SE') + " kr";
-    if(tb >= 0) {
-        tb_element.style.color = '#34d399';
-    } else {
-        tb_element.style.color = '#f87171';
-    }
-    
-    document.getElementById('out_marginal').innerText = "Marginal: " + marginal.toFixed(1) + "%";
-}
-
-// Kör direkt vid start
-calculate();
-</script>
-</body>
-</html>
+            <div class="section">
+                <div class="section-title">3. Avvikelser & Sjukdomsrisk</div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Simulera frånvarotimmar (Sjukdom)</label>
+                        <input type="number" id="sjuk_timmar"
