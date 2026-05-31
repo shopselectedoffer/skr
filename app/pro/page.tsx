@@ -177,7 +177,8 @@ export default function App() {
   const [turnoverFeePct, setTurnoverFeePct] = useState<number>(0);
 
   const [housingCost, setHousingCost] = useState<number>(0);
-  const [travelCost, setTravelCost] = useState<number>(0);
+  const [mileageKm, setMileageKm] = useState<number>(0);
+  const [mileageRate, setMileageRate] = useState<number>(25);
 
   // Advanced States fylls i live
   const [introHours, setIntroHours] = useState<number>(0);
@@ -352,8 +353,10 @@ export default function App() {
     const sa = saUnderlag * (socialRate / 100);
 
     const tak2026 = 52125;
-    const pLowBase = Math.min(finalBruttoLon, tak2026);
-    const pHighBase = Math.max(finalBruttoLon - tak2026, 0);
+    // Branschstandard: ordinarie tjänstepension beräknas på bruttolön före löneväxling
+    // så att den ordinarie pensionen inte försämras av löneväxlingen.
+    const pLowBase = Math.min(grossWageBeforeVaxling, tak2026);
+    const pHighBase = Math.max(grossWageBeforeVaxling - tak2026, 0);
 
     const pLow = includePension ? pLowBase * 0.045 : 0;
     const pHigh = includePension ? pHighBase * (pensionHighPct / 100) : 0;
@@ -361,6 +364,7 @@ export default function App() {
     const pensionVaxlingBonus = appliedLonevaxling * 1.06; 
     const pension = pLow + pHigh + pensionVaxlingBonus;
     const sll = pension * 0.2426; 
+    const travelCost = mileageKm * mileageRate;
 
     const totalCost = finalBruttoLon + sa + pension + sll + housingCost + travelCost + totalVite;
     const tb = revTotal - totalCost;
@@ -376,7 +380,7 @@ export default function App() {
       totalVite, totalBostadForman, pensionVaxlingBonus, totalSchablonRevenue,
       grossWageBeforeVaxling, maxRecommendedLonevaxling, appliedLonevaxling, travelCost
     };
-  }, [rowsCalc, includePension, pensionHighPct, housingCost, travelCost, tbSplitPct, turnoverFeePct, introHours, sickHours, maxViteTak, lonevaxling, schablonCount, schablonAmount, bostadToggle, bostadKvm, bostadDygn, spec, wage, basePrice, socialRate]);
+  }, [rowsCalc, includePension, pensionHighPct, housingCost, mileageKm, mileageRate, tbSplitPct, turnoverFeePct, introHours, sickHours, maxViteTak, lonevaxling, schablonCount, schablonAmount, bostadToggle, bostadKvm, bostadDygn, spec, wage, basePrice, socialRate]);
 
   const fmt = (v: number) => new Intl.NumberFormat("sv-SE", { maximumFractionDigits: 0 }).format(Math.round(v || 0));
 
@@ -585,10 +589,7 @@ export default function App() {
               <span className="text-slate-600">Direkt hyra/boende (Stensjö-utgift, kr)</span>
               <input type="number" className="w-24 text-right rounded border p-0.5 text-xs font-medium" value={housingCost} onChange={(e) => setHousingCost(+e.target.value || 0)} />
             </div>
-            <div className="flex items-center justify-between">
-              <span className="text-slate-600">Övriga resekostnader/tåg (utgift, kr)</span>
-              <input type="number" className="w-24 text-right rounded border p-0.5 text-xs font-medium" value={travelCost} onChange={(e) => setTravelCost(Math.max(0, +e.target.value || 0))} />
-            </div>
+
           </div>
         </div>
       </section>
@@ -640,7 +641,8 @@ export default function App() {
           <div className="border-t border-slate-700/50 my-1 col-span-full" />
           
           <div><span className="text-slate-400">Totala Bruttointäkter:</span> <span className="font-bold text-emerald-400 text-sm">{fmt(totals.revTotal)} kr</span></div>
-          <div><span className="text-slate-400">Skattepliktig Bruttolön:</span> <span className="font-bold text-amber-300 text-sm">{fmt(totals.bruttoLon)} kr</span></div>
+          <div><span className="text-slate-400">Bruttolön före löneväxling:</span> <span className="font-bold text-slate-100 text-sm">{fmt(totals.grossWageBeforeVaxling)} kr</span></div>
+          <div><span className="text-slate-400">Skattepliktig Bruttolön efter löneväxling:</span> <span className="font-bold text-amber-300 text-sm">{fmt(totals.bruttoLon)} kr</span></div>
           <div><span className="text-slate-400">Sociala Avgifter (SA):</span> <span className="font-bold">{fmt(totals.sa)} kr</span></div>
 
           {totals.totalBostadForman > 0 && (
@@ -651,12 +653,12 @@ export default function App() {
 
           <div className="border-t border-slate-700/50 my-1 col-span-full" />
 
-          <div><span className="text-slate-400">Pension upp till 52 125 kr:</span> <span>{fmt(totals.pLow)} kr</span></div>
-          <div><span className="text-slate-400">Pension över tröskeln:</span> <span>{fmt(totals.pHigh)} kr</span></div>
+          <div><span className="text-slate-400">Ordinarie pension upp till 52 125 kr (före löneväxling):</span> <span>{fmt(totals.pLow)} kr</span></div>
+          <div><span className="text-slate-400">Ordinarie pension över tröskeln (före löneväxling):</span> <span>{fmt(totals.pHigh)} kr</span></div>
           <div><span className="text-slate-400">Löneväxling insatt (+6%):</span> <span className="text-emerald-400 font-bold">{fmt(totals.pensionVaxlingBonus)} kr</span></div>
           <div><span className="text-slate-400">Särskild Löneskatt (Pension):</span> <span>{fmt(totals.sll)} kr</span></div>
           <div><span className="text-slate-400">Faktisk boendehyra (utgift):</span> <span>{fmt(housingCost)} kr</span></div>
-          <div><span className="text-slate-400">Övriga resekostnader/tåg:</span> <span>{fmt(totals.travelCost)} kr</span></div>
+          <div><span className="text-slate-400">Milersättning:</span> <span>{fmt(totals.travelCost)} kr ({mileageKm} mil × {fmt(mileageRate)} kr)</span></div>
           <div><span className="text-slate-400">Max rekommenderad löneväxling i detta scenario:</span> <span className="font-bold text-emerald-400">{fmt(totals.maxRecommendedLonevaxling)} kr</span></div>
           <div><span className="text-slate-400">Valt löneväxlingsbelopp:</span> <span className="font-bold text-emerald-400">{fmt(totals.appliedLonevaxling)} kr</span></div>
           <div><span className="text-slate-400">TOTAL SJÄLVKOSTNAD BOLAGET:</span> <span className="font-bold text-sm text-rose-300">{fmt(totals.totalCost)} kr</span></div>
@@ -669,6 +671,14 @@ export default function App() {
         )}
 
         <div className="pt-4 border-t border-slate-700 flex flex-wrap gap-4 items-center bg-slate-900/50 p-3 rounded-xl text-xs">
+          <label className="flex items-center gap-2">
+            <span className="text-slate-300">Antal mil</span>
+            <input type="number" className="w-20 rounded border border-slate-600 bg-slate-800 p-1 text-right font-bold text-white" value={mileageKm} onChange={(e) => setMileageKm(Math.max(0, +e.target.value || 0))} />
+          </label>
+          <label className="flex items-center gap-2">
+            <span className="text-slate-300">Kr/mil</span>
+            <input type="number" className="w-20 rounded border border-slate-600 bg-slate-800 p-1 text-right font-bold text-white" value={mileageRate} onChange={(e) => setMileageRate(Math.max(0, +e.target.value || 0))} />
+          </label>
           <label className="flex items-center gap-2">
             <span className="text-slate-300">Löneväxlingsbelopp (kr/månad)</span>
             <input type="number" className="w-28 rounded border border-slate-600 bg-slate-800 p-1 text-right font-bold text-white" value={lonevaxling} onChange={(e) => setLonevaxling(Math.max(0, +e.target.value || 0))} />
