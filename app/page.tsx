@@ -80,7 +80,7 @@ function buildCalendars(year: number) {
     iso(goodFriday),
     iso(easter),
     iso(easterMon),
-    iso(midsDay),
+     midsDay,
     iso(new Date(Date.UTC(year, 11, 25))),
     iso(new Date(Date.UTC(year, 11, 26))),
   ]);
@@ -179,7 +179,7 @@ export default function App() {
   const [housingCost, setHousingCost] = useState<number>(0);
   const [travelRevenue, setTravelRevenue] = useState<number>(0);
 
-  // Advanced States fylls i live
+  // Advanced States
   const [introHours, setIntroHours] = useState<number>(0);
   const [sickHours, setSickHours] = useState<number>(0);
   const [maxViteTak, setMaxViteTak] = useState<number>(40000);
@@ -221,7 +221,6 @@ export default function App() {
     setBasePrice(next);
   }, [zone, spec, year, priceModel]);
 
-  // Proportioneell rastavräkning baserat på passets faktiska OB-innehåll
   function parseScheduleText(text: string) {
     try {
       const lines = text.trim().split(/\r?\n/);
@@ -314,7 +313,6 @@ export default function App() {
     });
   }, [ROWS, obHours, obKund, obKonsult, basePrice, wage, socialRate]);
 
-  // Beräkningsmotorn
   const totals = useMemo(() => {
     let baseRev = 0, baseCost = 0, totalHours = 0;
     for (const r of rowsCalc) {
@@ -455,7 +453,7 @@ export default function App() {
         </label>
       </section>
 
-      {/* DET NYA SÄKRA KONTROLLBLOCKET */}
+      {/* AVANCERADE KONTROLLER */}
       <section className="grid grid-cols-1 md:grid-cols-3 gap-6 rounded-xl border p-4 bg-gradient-to-br from-slate-50 to-blue-50/30">
         <div className="space-y-4">
           <h3 className="font-bold text-sm text-slate-700 border-b pb-1">⚙️ Avrop & Löneväxling</h3>
@@ -515,7 +513,7 @@ export default function App() {
         </div>
       </section>
 
-      {/* ALLA DINA JÄVLA ORGINAL-OB INPUTS PÅ RÄTT PLATS */}
+      {/* Inputs för OB */}
       <section className="rounded-xl border p-4 grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <h2 className="font-semibold mb-2">OB enligt avtal (kund) – kr/h</h2>
