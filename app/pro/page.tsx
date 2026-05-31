@@ -360,9 +360,10 @@ export default function App() {
 
     const pLow = includePension ? pLowBase * 0.045 : 0;
     const pHigh = includePension ? pHighBase * (pensionHighPct / 100) : 0;
+    const ordinaryPension = pLow + pHigh;
     
     const pensionVaxlingBonus = appliedLonevaxling * 1.06; 
-    const pension = pLow + pHigh + pensionVaxlingBonus;
+    const pension = ordinaryPension + pensionVaxlingBonus;
     const sll = pension * 0.2426; 
     const travelCost = mileageKm * mileageRate;
 
@@ -376,7 +377,7 @@ export default function App() {
 
     return {
       h: totalHours, rev: baseRev, revTotal, bruttoLon: finalBruttoLon, sa, pension,
-      pLow, pHigh, sll, totalCost, tb, tbChef, tbPartner, turnoverFee, tbPartnerNet,
+      pLow, pHigh, ordinaryPension, sll, totalCost, tb, tbChef, tbPartner, turnoverFee, tbPartnerNet,
       totalVite, totalBostadForman, pensionVaxlingBonus, totalSchablonRevenue,
       grossWageBeforeVaxling, maxRecommendedLonevaxling, appliedLonevaxling, travelCost
     };
@@ -669,6 +670,56 @@ export default function App() {
             Varning: vald löneväxling är högre än rekommenderat max i detta scenario. Kontrollera att bruttolönen efter löneväxling inte hamnar under 56 087 kr/mån.
           </div>
         )}
+
+        <div className="rounded-xl border border-emerald-500/30 bg-emerald-950/30 p-4 space-y-3">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 border-b border-emerald-500/20 pb-2">
+            <h3 className="font-bold text-sm text-emerald-300">Pedagogisk sammanfattning till konsulten</h3>
+            <span className="text-[11px] text-emerald-100/80">Visar vad konsulten får i lön, pension och skattefri milersättning i detta scenario.</span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 text-xs font-mono">
+            <div className="rounded-lg bg-slate-900/60 p-3 border border-slate-700">
+              <div className="text-slate-400">Bruttolön före löneväxling</div>
+              <div className="text-lg font-bold text-white">{fmt(totals.grossWageBeforeVaxling)} kr</div>
+            </div>
+            <div className="rounded-lg bg-slate-900/60 p-3 border border-slate-700">
+              <div className="text-slate-400">Kontant bruttolön efter löneväxling</div>
+              <div className="text-lg font-bold text-amber-300">{fmt(totals.bruttoLon)} kr</div>
+            </div>
+            <div className="rounded-lg bg-slate-900/60 p-3 border border-slate-700">
+              <div className="text-slate-400">Skattefri milersättning</div>
+              <div className="text-lg font-bold text-blue-300">{fmt(totals.travelCost)} kr</div>
+              <div className="text-[10px] text-slate-500">{mileageKm} mil × {fmt(mileageRate)} kr/mil</div>
+            </div>
+            <div className="rounded-lg bg-slate-900/60 p-3 border border-slate-700">
+              <div className="text-slate-400">Extra pension via löneväxling</div>
+              <div className="text-lg font-bold text-emerald-300">{fmt(totals.pensionVaxlingBonus)} kr</div>
+              <div className="text-[10px] text-slate-500">Valt belopp × 1,06</div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs font-mono">
+            <div className="rounded-lg bg-slate-900/60 p-3 border border-slate-700">
+              <div className="text-slate-400">Ordinarie tjänstepension</div>
+              <div className="text-base font-bold text-white">{fmt(totals.ordinaryPension)} kr</div>
+              <div className="text-[10px] text-slate-500">Beräknad på bruttolön före löneväxling</div>
+            </div>
+            <div className="rounded-lg bg-slate-900/60 p-3 border border-slate-700">
+              <div className="text-slate-400">Total pensionsavsättning</div>
+              <div className="text-base font-bold text-emerald-300">{fmt(totals.pension)} kr</div>
+              <div className="text-[10px] text-slate-500">Ordinarie pension + löneväxling</div>
+            </div>
+            <div className="rounded-lg bg-slate-900/60 p-3 border border-slate-700">
+              <div className="text-slate-400">Totalt värde före skatt</div>
+              <div className="text-base font-bold text-indigo-300">{fmt(totals.bruttoLon + totals.travelCost + totals.pension)} kr</div>
+              <div className="text-[10px] text-slate-500">Kontant bruttolön + milersättning + pension</div>
+            </div>
+          </div>
+
+          <div className="text-[11px] leading-relaxed text-emerald-50/90 bg-slate-950/40 border border-slate-700 rounded-lg p-3">
+            Förklaring: konsulten får kontant bruttolön efter löneväxling, skattefri milersättning separat och pensionsavsättning via både ordinarie tjänstepension och löneväxling. Löneväxlingen minskar arbetsgivaravgiften på lönedelen och ersätts av extra pension samt särskild löneskatt i bolagets kalkyl.
+          </div>
+        </div>
 
         <div className="pt-4 border-t border-slate-700 flex flex-wrap gap-4 items-center bg-slate-900/50 p-3 rounded-xl text-xs">
           <label className="flex items-center gap-2">
