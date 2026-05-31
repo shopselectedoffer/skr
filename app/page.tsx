@@ -130,4 +130,71 @@
                     </div>
                     <div class="form-group">
                         <label>Vardag natt (22–06) (+40 kr/h OB)</label>
-                        <input
+                        <input type="number" id="h_vn" value="0" oninput="runCalculation()">
+                    </div>
+                    <div class="form-group">
+                        <label>Helg natt (22–06) (+50 kr/h OB)</label>
+                        <input type="number" id="h_hn" value="0" oninput="runCalculation()">
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">3. Avvikelser & Sjukdomsrisk</div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Simulera frånvarotimmar (Sjukdom)</label>
+                        <input type="number" id="sjuk_timmar" value="0" oninput="runCalculation()">
+                    </div>
+                    <div class="form-group">
+                        <label>Maximalt vites-tak hos region (kr)</label>
+                        <input type="number" id="vite_tak" value="40000" oninput="runCalculation()">
+                    </div>
+                </div>
+                <div class="checkbox-card">
+                    <input type="checkbox" id="skr_vite_active" onchange="runCalculation()">
+                    <div>
+                        <label style="margin: 0; font-weight: 700; color: #991b1b;">Aktivera SKR Fast Avtalsvite (10 000 kr)</label>
+                        <span style="font-size: 11px; color: #7f1d1d; display: block; margin-top: 2px;">Triggas vid tillfälle 4 och 5 enligt eskaleringstrappan.</span>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+        
+        <div>
+            <div class="result-panel">
+                <button class="btn-action" onclick="window.print()">🖨 Generera & Skriv ut Offert-PDF</button>
+                
+                <h2 style="font-size: 16px; margin-top: 0; color: #1e3a8a; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px;">
+                    Ekonomisk Sammanfattning
+                </h2>
+                
+                <table class="res-table">
+                    <tr>
+                        <td>Totala planerade schematimmar:</td>
+                        <td style="text-align: right; font-weight: 600;" id="lbl_total_timmar">176.00 h</td>
+                    </tr>
+                    <tr>
+                        <td>Faktiskt arbetade timmar:</td>
+                        <td style="text-align: right;" id="lbl_arbetade_timmar">176.00 h</td>
+                    </tr>
+                    <tr class="highlight-row">
+                        <td style="color: #16a34a;">Totala Bruttointäkter från kund:</td>
+                        <td style="text-align: right; color: #16a34a;" id="lbl_intakter">0 kr</td>
+                    </tr>
+                    <tr>
+                        <td>Grundlön + Avtals-OB (Innan avdrag):</td>
+                        <td style="text-align: right; font-weight: 600;" id="lbl_brutto_innan">0 kr</td>
+                    </tr>
+                    <tr>
+                        <td style="color: #b91c1c;">Valt Löneväxlingsavdrag:</td>
+                        <td style="text-align: right; color: #b91c1c;" id="lbl_valt_lv">0 kr</td>
+                    </tr>
+                    <tr style="background: #f8fafc; font-weight: bold;">
+                        <td>Skattepliktig bruttolön (Utbetalning):</td>
+                        <td style="text-align: right;" id="lbl_brutto_efter">0 kr</td>
+                    </tr>
+                    <tr>
+                        <td>Arbetsgivaravgifter (SA 31,42%):</td>
+                        <td style="text-align:
