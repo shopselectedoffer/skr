@@ -696,7 +696,7 @@ export default function App() {
             </div>
             <div className="rounded-lg bg-slate-900/60 p-3 border border-slate-700">
               <div className="text-slate-400">Skattefri milersättning</div>
-              <div className="text-lg font-bold text-blue-300">{fmt(totals.travelCost)} kr</div>
+              <div className="text-lg font-bold text-blue-300">{fmt(totals.mileageCost)} kr</div>
               <div className="text-[10px] text-slate-500">{mileageKm} mil × {fmt(mileageRate)} kr/mil</div>
             </div>
             <div className="rounded-lg bg-slate-900/60 p-3 border border-slate-700">
