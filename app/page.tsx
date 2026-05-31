@@ -41,7 +41,6 @@ function midsummerDay(year: number): Date {
   return new Date(Date.UTC(year, 5, 20));
 }
 
-// Lördagen under 31 okt – 6 nov
 function allSaintsDay(year: number): Date {
   for (let dd = 31; dd <= 31 + 6; dd++) {
     const month = dd <= 31 ? 9 : 10;
@@ -81,7 +80,7 @@ function buildCalendars(year: number) {
     iso(goodFriday),
     iso(easter),
     iso(easterMon),
-    iso(midsDay),
+    midsDay,
     iso(new Date(Date.UTC(year, 11, 25))),
     iso(new Date(Date.UTC(year, 11, 26))),
   ]);
@@ -180,7 +179,7 @@ export default function App() {
   const [housingCost, setHousingCost] = useState<number>(0);
   const [travelRevenue, setTravelRevenue] = useState<number>(0);
 
-  // Advanced States
+  // Avancerade states för beräkningsmotorn
   const [introHours, setIntroHours] = useState<number>(0);
   const [sickHours, setSickHours] = useState<number>(0);
   const [maxViteTak, setMaxViteTak] = useState<number>(40000);
@@ -222,6 +221,7 @@ export default function App() {
     setBasePrice(next);
   }, [zone, spec, year, priceModel]);
 
+  // Proportionell rastavräkning baserat på passets faktiska OB-innehåll
   function parseScheduleText(text: string) {
     try {
       const lines = text.trim().split(/\r?\n/);
@@ -296,3 +296,181 @@ export default function App() {
       const h = obHours[r.key] || 0;
       const obKundRate = r.key === "baseWD" ? 0 : obKund[r.key] || 0;
       const obKonsultRate = r.key === "baseWD" ? 0 : obKonsult[r.key] || 0;
+
+      const kundRate = basePrice + obKundRate;
+      const konsultRate = wage + obKonsultRate;
+
+      const rev = h * kundRate;
+      const cost = h * konsultRate;
+      const saRow = cost * (socialRate / 100);
+      const tbInclSA = rev - cost - saRow;
+
+      return {
+        key: r.key, label: r.label, h,
+        obKundDisplay: r.key === "baseWD" ? basePrice : obKundRate,
+        obKonsultDisplay: r.key === "baseWD" ? wage : obKonsultRate,
+        rev, cost, saRow, tbInclSA,
+      };
+    });
+  }, [ROWS, obHours, obKund, obKonsult, basePrice, wage, socialRate]);
+
+  // Beräkningsmotorn
+  const totals = useMemo(() => {
+    let baseRev = 0, baseCost = 0, totalHours = 0;
+    for (const r of rowsCalc) {
+      baseRev += r.rev;
+      baseCost += r.cost;
+      totalHours += r.h;
+    }
+
+    const introRevDeduction = introHours * basePrice;
+    const netVardRev = Math.max(0, baseRev - introRevDeduction);
+
+    const isSpecialist = spec !== "SSK";
+    const hourlyViteRate = isSpecialist ? 1000 : 625; 
+    const calculatedVite = sickHours * hourlyViteRate;
+    const totalVite = Math.min(maxViteTak, calculatedVite);
+
+    const sickDeduction = sickHours * wage;
+    const sickPayHours = Math.max(0, sickHours - 8); 
+    const totalSjuklon = sickPayHours * (wage * 0.8); 
+
+    const grossWageBeforeVaxling = baseCost - (sickHours === 0 ? 0 : (sickDeduction - totalSjuklon));
+    const finalBruttoLon = Math.max(0, grossWageBeforeVaxling - lonevaxling);
+
+    const totalSchablonRevenue = schablonCount * schablonAmount;
+    const revTotal = netVardRev + totalSchablonRevenue + travelRevenue;
+
+    let bostadSchablonPerDygn = 36; 
+    if (bostadKvm <= 25) bostadSchablonPerDygn = 29;
+    else if (bostadKvm >= 70) bostadSchablonPerDygn = 59;
+    
+    const totalBostadForman = bostadToggle ? (bostadSchablonPerDygn * bostadDygn) : 0;
+    const saUnderlag = finalBruttoLon + totalBostadForman;
+    const sa = saUnderlag * (socialRate / 100);
+
+    const tak2026 = 52125;
+    const pLowBase = Math.min(finalBruttoLon, tak2026);
+    const pHighBase = Math.max(finalBruttoLon - tak2026, 0);
+
+    const pLow = includePension ? pLowBase * 0.045 : 0;
+    const pHigh = includePension ? pHighBase * (pensionHighPct / 100) : 0;
+    
+    const pensionVaxlingBonus = lonevaxling * 1.06; 
+    const pension = pLow + pHigh + pensionVaxlingBonus;
+    const sll = pension * 0.2426; 
+
+    const totalCost = finalBruttoLon + sa + pension + sll + housingCost + totalVite;
+    const tb = revTotal - totalCost;
+
+    const tbChef = tb * (tbSplitPct / 100);
+    const tbPartner = tb - tbChef;
+    const turnoverFee = revTotal * (turnoverFeePct / 100);
+    const tbPartnerNet = tbPartner - turnoverFee;
+
+    return {
+      h: totalHours, rev: baseRev, revTotal, bruttoLon: finalBruttoLon, sa, pension,
+      pLow, pHigh, sll, totalCost, tb, tbChef, tbPartner, turnoverFee, tbPartnerNet,
+      totalVite, totalBostadForman, pensionVaxlingBonus, totalSchablonRevenue
+    };
+  }, [rowsCalc, includePension, pensionHighPct, housingCost, travelRevenue, tbSplitPct, turnoverFeePct, introHours, sickHours, maxViteTak, lonevaxling, schablonCount, schablonAmount, bostadToggle, bostadKvm, bostadDygn, spec, wage, basePrice, socialRate]);
+
+  const fmt = (v: number) => new Intl.NumberFormat("sv-SE", { maximumFractionDigits: 0 }).format(Math.round(v || 0));
+
+  return (
+    <div className="p-6 max-w-6xl mx-auto font-sans space-y-6 bg-white text-slate-900">
+      <div className="flex justify-between items-center border-b pb-4">
+        <h1 className="text-2xl font-bold text-slate-800">🌸 KLARA Master Offertsnurra Pro (2026)</h1>
+        <span className="bg-emerald-100 text-emerald-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">Guldstandard Live</span>
+      </div>
+
+      <div className="flex gap-2">
+        <button className={`px-4 py-2 rounded-lg border font-medium ${mode === "Anställd" ? "bg-slate-800 text-white" : "bg-white text-slate-700 hover:bg-slate-50"}`} onClick={() => { setMode("Anställd"); setTaxProfile("Normal"); }}>
+          Anställd / Pensionär
+        </button>
+        <button className={`px-4 py-2 rounded-lg border font-medium ${mode === "Underkonsult" ? "bg-slate-800 text-white" : "bg-white text-slate-700 hover:bg-slate-50"}`} onClick={() => { setMode("Underkonsult"); setTaxProfile("Underkonsult"); }}>
+          Underkonsult
+        </button>
+      </div>
+
+      <section className="rounded-xl border bg-slate-50/50 p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 items-end">
+        <label className="flex flex-col gap-1">
+          <span className="text-xs font-semibold text-slate-600">Region/Kommun/Privat</span>
+          <select className="rounded-lg border bg-white p-2 text-sm" value={priceModel} onChange={(e) => setPriceModel(e.target.value as any)}>
+            <option value="Region">Region</option>
+            <option value="Kommun">Kommun</option>
+            <option value="Privat">Privat</option>
+          </select>
+        </label>
+
+        <label className="flex flex-col gap-1">
+          <span className="text-xs font-semibold text-slate-600">Zon (Region)</span>
+          <select className="rounded-lg border bg-white p-2 text-sm" value={zone} onChange={(e) => setZone(e.target.value as any)} disabled={priceModel !== "Region"}>
+            <option value="1">Zon 1</option>
+            <option value="2">Zon 2</option>
+            <option value="3">Zon 3 (Norrland)</option>
+          </select>
+        </label>
+
+        <label className="flex flex-col gap-1">
+          <span className="text-xs font-semibold text-slate-600">Kompetens</span>
+          <select className="rounded-lg border bg-white p-2 text-sm" value={spec} onChange={(e) => setSpec(e.target.value as any)}>
+            <option value="SSK">Allmän SSK</option>
+            <option value="SSK Spec">SSK Spec</option>
+            <option value="Spec ANE/IVA/OP/BM">Spec ANE/IVA/OP/BM</option>
+          </select>
+        </label>
+
+        <label className="flex flex-col gap-1">
+          <span className="text-xs font-semibold text-slate-600">År</span>
+          <select className="rounded-lg border bg-white p-2 text-sm" value={year} onChange={(e) => setYear(parseInt(e.target.value, 10))}>
+            <option value={2026}>2026</option>
+          </select>
+        </label>
+
+        <label className="flex flex-col gap-1">
+          <span className="text-xs font-semibold text-slate-600">Baspris kund (kr/h)</span>
+          <input type="number" className="rounded-lg border bg-white p-2 text-sm text-right font-medium" value={basePrice} onChange={(e) => setBasePrice(+e.target.value || 0)} />
+        </label>
+
+        <label className="flex flex-col gap-1">
+          <span className="text-xs font-semibold text-slate-600">Timlön inkl sem (kr/h)</span>
+          <input type="number" className="rounded-lg border bg-white p-2 text-sm text-right font-medium text-blue-600" value={wage} onChange={(e) => setWage(+e.target.value || 0)} />
+        </label>
+
+        {mode === "Anställd" && (
+          <label className="flex flex-col gap-1 lg:col-span-2">
+            <span className="text-xs font-semibold text-slate-600">Skattekategori</span>
+            <select className="rounded-lg border bg-white p-2 text-sm" value={taxProfile} onChange={(e) => setTaxProfile(e.target.value as any)}>
+              <option value="Normal">Anställd (31,42%)</option>
+              <option value="Pensionär">Pensionär (10,21%)</option>
+              <option value="Äldre">Född ≤ 1958 (10,21%)</option>
+            </select>
+          </label>
+        )}
+
+        <label className="flex items-center gap-2 lg:col-span-2 pb-2">
+          <input type="checkbox" className="rounded border-slate-300 text-slate-800" checked={includePension} onChange={(e) => setIncludePension(e.target.checked)} disabled={taxProfile === "Pensionär" || taxProfile === "Underkonsult"} />
+          <span className="text-sm font-medium text-slate-700">Tjänstepension Aktiv</span>
+        </label>
+      </section>
+
+      {/* AVANCERADE KONTROLLER */}
+      <section className="grid grid-cols-1 md:grid-cols-3 gap-6 rounded-xl border p-4 bg-gradient-to-br from-slate-50 to-blue-50/30">
+        <div className="space-y-4">
+          <h3 className="font-bold text-sm text-slate-700 border-b pb-1">⚙️ Avrop & Löneväxling</h3>
+          <label className="flex flex-col gap-1">
+            <span className="text-xs text-slate-600">Antal introtimmar (0 kr intäkt, full lön)</span>
+            <input type="number" className="rounded-lg border bg-white p-1.5 text-sm text-right" value={introHours} onChange={(e) => setIntroHours(Math.max(0, +e.target.value || 0))} />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-xs text-slate-600">Löneväxlingsbelopp (kr/månad)</span>
+            <input type="number" className="rounded-lg border bg-white p-1.5 text-sm text-right text-emerald-600 font-semibold" value={lonevaxling} onChange={(e) => setLonevaxling(Math.max(0, +e.target.value || 0))} />
+          </label>
+        </div>
+
+        <div className="space-y-4 border-x px-4">
+          <h3 className="font-bold text-sm text-slate-700 border-b pb-1">🚨 Sjukdom & Vitesrisk</h3>
+          <label className="flex flex-col gap-1">
+            <span className="text-xs text-slate-600">Frånvarotimmar totalt (sjukdom)</span>
+            <input type="number" className="rounded-lg border bg-white p-1.5 text-sm text-right text-rose-600 font-semibold" value={sickHours} onChange={(e) => setSickHours(Math.max(0, +e.
