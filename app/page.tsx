@@ -150,7 +150,7 @@ function splitWithCalendar(dateISO: string, startMin: number, endMin: number, ye
 
 const BASE_PRICES_2026 = {
   "SSK": { z1: 616, z2: 660, z3: 715 },
-  "SSK Spec": { z1: 715, z2: 770, z3: 824 },
+  "SSK Spec": { z1: 715, text: 770, z2: 770, z3: 824 },
   "Spec ANE/IVA/OP/BM": { z1: 770, z2: 824, z3: 880 },
 } as const;
 
@@ -219,11 +219,11 @@ export default function App() {
   useEffect(() => {
     if (priceModel !== "Region") return;
     const z = zone === "1" ? "z1" : zone === "2" ? "z2" : "z3";
-    const next = BASE_PRICES_2026[spec][z];
-    setBasePrice(next);
+    const next = BASE_PRICES_2026[spec][z as "z1" | "z2" | "z3"];
+    if (next) setBasePrice(next);
   }, [zone, spec, year, priceModel]);
 
-  // Proportionell rastavräkning baserat på passets faktiska OB-innehåll
+  // Proportioneell rastavräkning baserat på passets faktiska OB-innehåll
   function parseScheduleText(text: string) {
     try {
       const lines = text.trim().split(/\r?\n/);
