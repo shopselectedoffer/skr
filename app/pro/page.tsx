@@ -147,71 +147,18 @@ const ROWS = [
 ];
 
 export default function App() {
-  const [mode, setMode] = useState<"Anställd" | "Underkonsult">("Anställd");
-  const [priceModel, setPriceModel] = useState<"Region" | "Kommun" | "Privat">("Region");
-  const [zone, setZone] = useState<"1" | "2" | "3">("1");
   const [spec, setSpec] = useState<keyof typeof BASE_PRICES_2026>("Spec ANE/IVA/OP/BM");
-  const [year, setYear] = useState<number>(2026);
-
   const [basePrice, setBasePrice] = useState<number>(770);
   const [wage, setWage] = useState<number>(470);
-
-  const [taxProfile, setTaxProfile] = useState<"Normal" | "Pensionär" | "Äldre" | "Underkonsult">("Normal");
   const [socialRate, setSocialRate] = useState<number>(31.42);
-  const [includePension, setIncludePension] = useState<boolean>(true);
-  const [pensionHighPct, setPensionHighPct] = useState<number>(30);
 
-  const [tbSplitPct, setTbSplitPct] = useState<number>(60);
-  const [turnoverFeePct, setTurnoverFeePct] = useState<number>(0);
+  // NYA INPUTRUTOR FÖR AUTOMATISK MILBERÄKNING
+  const [milCount, setMilCount] = useState<number>(192); // Exempel: 192 mil för september
+  const [milRate, setMilRate] = useState<number>(18);   // Användarens exempel: 18 kr/milen
 
-  const [housingCost, setHousingCost] = useState<number>(0);
-  
-  // ÖPPNA RUTOR FÖR KOSTNADER & ERSÄTTNINGAR
-  const [taxFreeMil, setTaxFreeMil] = useState<number>(4800);
+  // SITHS-KORT
   const [sithsSetupCost, setSithsSetupCost] = useState<number>(0);
   const [sithsMonthlyCost, setSithsMonthlyCost] = useState<number>(0);
 
   const [sickHours, setSickHours] = useState<number>(0);
-  const [maxViteTak, setMaxViteTak] = useState<number>(40000);
-  const [lonevaxling, setLonevaxling] = useState<number>(0);
-  
-  const [uploadInfo, setUploadInfo] = useState<string | null>(null);
-  const [pasteText, setPasteText] = useState<string>("");
-
-  const [obKund, setObKund] = useState<Record<Keys, number>>({ ...OB_KUND_2026 });
-  const [obKonsult, setObKonsult] = useState<Record<Keys, number>>({
-    baseWD: 0, eveWD: 20, nightWD: 40, baseWE: 50, eveWE: 50, nightWE: 50, daySH: 100, nightSH: 150,
-  });
-
-  const [obHours, setObHours] = useState<Record<Keys, number>>({
-    baseWD: 116, eveWD: 24, nightWD: 0, baseWE: 24, eveWE: 12, nightWE: 0, daySH: 0, nightSH: 0,
-  });
-
-  useEffect(() => {
-    if (taxProfile === "Normal") setSocialRate(31.42);
-    if (taxProfile === "Pensionär" || taxProfile === "Äldre") setSocialRate(10.21);
-    if (taxProfile === "Underkonsult") setSocialRate(0);
-    if (taxProfile === "Pensionär" || taxProfile === "Underkonsult") setIncludePension(false);
-    else setIncludePension(true);
-  }, [taxProfile]);
-
-  useEffect(() => {
-    if (priceModel !== "Region") return;
-    const zKey = zone === "1" ? "z1" : zone === "2" ? "z2" : "z3";
-    setBasePrice(BASE_PRICES_2026[spec][zKey]);
-  }, [zone, spec, year, priceModel]);
-
-  function parseScheduleText(text: string) {
-    try {
-      const lines = text.trim().split(/\r?\n/);
-      if (!lines.length) throw new Error("Ingen data");
-      const head = (lines.shift() || "").trim();
-      const sep = head.includes(";") ? ";" : ",";
-      const cols = head.split(sep).map((s) => s.trim().toLowerCase());
-
-      const iDate = cols.indexOf("date");
-      const iStart = cols.indexOf("start") >= 0 ? cols.indexOf("start") : cols.indexOf("starttime");
-      const iEnd = cols.indexOf("end") >= 0 ? cols.indexOf("end") : cols.indexOf("endtime");
-      const iBreak = cols.findIndex((c) => ["breakmin", "break", "rast", "paus"].includes(c));
-
-      if (iDate < 0
+  const [lonevaxling, setLonevaxling] = useState<number>(10000); //
