@@ -183,6 +183,7 @@ export default function App() {
   // Advanced States fylls i live
   const [introHours, setIntroHours] = useState<number>(0);
   const [sickHours, setSickHours] = useState<number>(0);
+  const [karensHours, setKarensHours] = useState<number>(8);
   const [maxViteTak, setMaxViteTak] = useState<number>(40000);
   const [lonevaxling, setLonevaxling] = useState<number>(0);
   
@@ -324,19 +325,29 @@ export default function App() {
       totalHours += r.h;
     }
 
+    const safeSickHours = Math.min(Math.max(0, sickHours), totalHours);
+    const workedHours = Math.max(0, totalHours - safeSickHours);
+    const workedRatio = totalHours > 0 ? workedHours / totalHours : 0;
+
+    // Sjukdom ska inte ge kundintäkt. Intäkt och ordinarie lön reduceras proportionellt.
+    // Därefter tillkommer bara sjuklön enligt karens + 80 %-regel samt eventuellt vite från regionen.
+    const workedRev = baseRev * workedRatio;
+    const workedCost = baseCost * workedRatio;
+    const lostCustomerRevenue = Math.max(0, baseRev - workedRev);
+
     const introRevDeduction = introHours * basePrice;
-    const netVardRev = Math.max(0, baseRev - introRevDeduction);
+    const netVardRev = Math.max(0, workedRev - introRevDeduction);
 
     const isSpecialist = spec !== "SSK";
     const hourlyViteRate = isSpecialist ? 1000 : 625; 
-    const calculatedVite = sickHours * hourlyViteRate;
+    const calculatedVite = safeSickHours * hourlyViteRate;
     const totalVite = Math.min(maxViteTak, calculatedVite);
 
-    const sickDeduction = sickHours * wage;
-    const sickPayHours = Math.max(0, sickHours - 8); 
+    const appliedKarensHours = Math.min(Math.max(0, karensHours), safeSickHours);
+    const sickPayHours = Math.max(0, safeSickHours - appliedKarensHours); 
     const totalSjuklon = sickPayHours * (wage * 0.8); 
 
-    const grossWageBeforeVaxling = baseCost - (sickHours === 0 ? 0 : (sickDeduction - totalSjuklon));
+    const grossWageBeforeVaxling = workedCost + totalSjuklon;
     const maxRecommendedLonevaxling = Math.max(0, grossWageBeforeVaxling - 56087);
     const appliedLonevaxling = Math.min(lonevaxling, grossWageBeforeVaxling);
     const finalBruttoLon = Math.max(0, grossWageBeforeVaxling - appliedLonevaxling);
@@ -379,9 +390,10 @@ export default function App() {
       h: totalHours, rev: baseRev, revTotal, bruttoLon: finalBruttoLon, sa, pension,
       pLow, pHigh, ordinaryPension, sll, totalCost, tb, tbChef, tbPartner, turnoverFee, tbPartnerNet,
       totalVite, totalBostadForman, pensionVaxlingBonus, totalSchablonRevenue,
-      grossWageBeforeVaxling, maxRecommendedLonevaxling, appliedLonevaxling, travelCost
+      grossWageBeforeVaxling, maxRecommendedLonevaxling, appliedLonevaxling, travelCost,
+      workedHours, safeSickHours, appliedKarensHours, sickPayHours, totalSjuklon, lostCustomerRevenue
     };
-  }, [rowsCalc, includePension, pensionHighPct, housingCost, mileageKm, mileageRate, tbSplitPct, turnoverFeePct, introHours, sickHours, maxViteTak, lonevaxling, schablonCount, schablonAmount, bostadToggle, bostadKvm, bostadDygn, spec, wage, basePrice, socialRate]);
+  }, [rowsCalc, includePension, pensionHighPct, housingCost, mileageKm, mileageRate, tbSplitPct, turnoverFeePct, introHours, sickHours, karensHours, maxViteTak, lonevaxling, schablonCount, schablonAmount, bostadToggle, bostadKvm, bostadDygn, spec, wage, basePrice, socialRate]);
 
   const fmt = (v: number) => new Intl.NumberFormat("sv-SE", { maximumFractionDigits: 0 }).format(Math.round(v || 0));
 
@@ -479,6 +491,13 @@ export default function App() {
             <span className="text-xs text-slate-600">Frånvarotimmar totalt (sjukdom)</span>
             <input type="number" className="rounded-lg border bg-white p-1.5 text-sm text-right text-rose-600 font-semibold" value={sickHours} onChange={(e) => setSickHours(Math.max(0, +e.target.value || 0))} />
           </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-xs text-slate-600">Karensavdrag timmar (oftast 8 h)</span>
+            <input type="number" className="rounded-lg border bg-white p-1.5 text-sm text-right" value={karensHours} onChange={(e) => setKarensHours(Math.max(0, +e.target.value || 0))} />
+          </label>
+          <div className="text-[11px] text-slate-500 bg-white/70 rounded-lg border border-slate-200 p-2">
+            Sjuklön: {totals.sickPayHours.toFixed(2)} h × 80 %. Karens: {totals.appliedKarensHours.toFixed(2)} h. Ingen kundintäkt på sjukfrånvarotimmar.
+          </div>
           <label className="flex flex-col gap-1">
             <span className="text-xs text-slate-600">Maximalt vites-tak hos regionen (kr)</span>
             <input type="number" className="rounded-lg border bg-white p-1.5 text-sm text-right" value={maxViteTak} onChange={(e) => setMaxViteTak(Math.max(0, +e.target.value || 0))} />
@@ -636,6 +655,10 @@ export default function App() {
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-3 text-xs font-mono">
           <div><span className="text-slate-400">Totala schematimmar:</span> <span className="font-bold text-sm">{totals.h.toFixed(2)} h</span></div>
+          <div><span className="text-slate-400">Faktiskt arbetade timmar efter sjukdom:</span> <span className="font-bold text-sm">{totals.workedHours.toFixed(2)} h</span></div>
+          <div><span className="text-slate-400">Ej fakturerade sjukfrånvarotimmar:</span> <span className="font-bold text-rose-300">{totals.safeSickHours.toFixed(2)} h</span></div>
+          <div><span className="text-slate-400">Förlorad kundintäkt vid sjukdom:</span> <span className="font-bold text-rose-300">-{fmt(totals.lostCustomerRevenue)} kr</span></div>
+          <div><span className="text-slate-400">Sjuklön efter karens:</span> <span className="font-bold text-amber-300">{fmt(totals.totalSjuklon)} kr</span></div>
           <div><span className="text-slate-400">Regionalt Vite avdrag:</span> <span className="font-bold text-rose-400">-{fmt(totals.totalVite)} kr</span></div>
           <div><span className="text-slate-400">Reseschabloner intäkt:</span> <span className="font-bold text-blue-400">+{fmt(totals.totalSchablonRevenue)} kr</span></div>
           
@@ -717,7 +740,7 @@ export default function App() {
           </div>
 
           <div className="text-[11px] leading-relaxed text-emerald-50/90 bg-slate-950/40 border border-slate-700 rounded-lg p-3">
-            Förklaring: konsulten får kontant bruttolön efter löneväxling, skattefri milersättning separat och pensionsavsättning via både ordinarie tjänstepension och löneväxling. Löneväxlingen minskar arbetsgivaravgiften på lönedelen och ersätts av extra pension samt särskild löneskatt i bolagets kalkyl.
+            Förklaring: konsulten får kontant bruttolön efter eventuell löneväxling, skattefri milersättning separat och pensionsavsättning via både ordinarie tjänstepension och löneväxling. Vid sjukdom räknar kalkylen bort kundintäkt och ordinarie lön för frånvarotimmarna, lägger till sjuklön efter karens enligt 80 %-regeln och belastar dessutom eventuellt regionvite.
           </div>
         </div>
 
