@@ -477,18 +477,29 @@ export default function App() {
         </label>
       </section>
 
-      {/* DET NYA SÄKRA KONTROLLBLOCKET */}
+      {/* JUSTERINGAR, RISKER OCH TILLÄGG */}
       <section className="grid grid-cols-1 md:grid-cols-3 gap-6 rounded-xl border p-4 bg-gradient-to-br from-slate-50 to-blue-50/30">
+        <div className="md:col-span-3 border-b border-slate-200 pb-2">
+          <h2 className="font-bold text-base text-slate-800">⚙️ Justeringar, risker & tillägg</h2>
+          <p className="text-xs text-slate-500 mt-1">Här fyller du i sådant som påverkar affären: intro, sjukdom, vite/avbokning, resor, boende, schabloner och löneväxling. Utfallet visas pedagogiskt längre ner.</p>
+        </div>
         <div className="space-y-4">
-          <h3 className="font-bold text-sm text-slate-700 border-b pb-1">⚙️ Avrop & Löneväxling</h3>
+          <h3 className="font-bold text-sm text-slate-700 border-b pb-1">🧾 Arbetstid & löneväxling</h3>
           <label className="flex flex-col gap-1">
             <span className="text-xs text-slate-600">Antal introtimmar (0 kr intäkt, full lön)</span>
             <input type="number" className="rounded-lg border bg-white p-1.5 text-sm text-right" value={introHours} onChange={(e) => setIntroHours(Math.max(0, +e.target.value || 0))} />
           </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-xs text-slate-600">Löneväxlingsbelopp (kr/månad)</span>
+            <input type="number" className="rounded-lg border bg-white p-1.5 text-sm text-right text-emerald-700 font-semibold" value={lonevaxling} onChange={(e) => setLonevaxling(Math.max(0, +e.target.value || 0))} />
+          </label>
+          <div className="text-[11px] text-slate-500 bg-white/70 rounded-lg border border-slate-200 p-2">
+            Max rekommenderad löneväxling i detta scenario: {fmt(totals.maxRecommendedLonevaxling)} kr.
+          </div>
         </div>
 
         <div className="space-y-4 border-x px-4">
-          <h3 className="font-bold text-sm text-slate-700 border-b pb-1">🚨 Sjukdom & Vitesrisk</h3>
+          <h3 className="font-bold text-sm text-slate-700 border-b pb-1">🚨 Sjukdom separat från vite/avbokning</h3>
           <label className="flex flex-col gap-1">
             <span className="text-xs text-slate-600">Sjukfrånvarotimmar (påverkar intäkt + sjuklön)</span>
             <input type="number" className="rounded-lg border bg-white p-1.5 text-sm text-right text-rose-600 font-semibold" value={sickHours} onChange={(e) => setSickHours(Math.max(0, +e.target.value || 0))} />
@@ -514,8 +525,20 @@ export default function App() {
         </div>
 
         <div className="space-y-4">
-          <h3 className="font-bold text-sm text-slate-700 border-b pb-1">🗺️ Reseschablon & Bostadsförmån</h3>
+          <h3 className="font-bold text-sm text-slate-700 border-b pb-1">🗺️ Resa, boende & schablon</h3>
           <div className="grid grid-cols-2 gap-2">
+            <label className="flex flex-col gap-1">
+              <span className="text-xs text-slate-600">Antal mil</span>
+              <input type="number" className="rounded-lg border bg-white p-1.5 text-sm text-right font-semibold" value={mileageKm} onChange={(e) => setMileageKm(Math.max(0, +e.target.value || 0))} />
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="text-xs text-slate-600">Kr/mil</span>
+              <input type="number" className="rounded-lg border bg-white p-1.5 text-sm text-right font-semibold" value={mileageRate} onChange={(e) => setMileageRate(Math.max(0, +e.target.value || 0))} />
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="text-xs text-slate-600">Direkt hyra/boende (utgift)</span>
+              <input type="number" className="rounded-lg border bg-white p-1.5 text-sm text-right" value={housingCost} onChange={(e) => setHousingCost(Math.max(0, +e.target.value || 0))} />
+            </label>
             <label className="flex flex-col gap-1">
               <span className="text-xs text-slate-600">Reseschabloner (st)</span>
               <input type="number" className="rounded-lg border bg-white p-1.5 text-sm text-right text-blue-600 font-semibold" value={schablonCount} onChange={(e) => setSchablonCount(Math.max(0, +e.target.value || 0))} />
@@ -613,13 +636,6 @@ export default function App() {
             </div>
           </div>
 
-          <div className="mt-2 rounded-lg border p-2 bg-slate-50 text-xs space-y-1.5">
-            <div className="flex items-center justify-between">
-              <span className="text-slate-600">Direkt hyra/boende (Stensjö-utgift, kr)</span>
-              <input type="number" className="w-24 text-right rounded border p-0.5 text-xs font-medium" value={housingCost} onChange={(e) => setHousingCost(+e.target.value || 0)} />
-            </div>
-
-          </div>
         </div>
       </section>
 
@@ -655,55 +671,8 @@ export default function App() {
         </table>
       </section>
 
-      {/* EKONOMISK SAMMANFATTNING */}
-      <section className="rounded-xl border p-4 bg-slate-800 text-white shadow-lg space-y-4">
-        <h2 className="font-bold text-base tracking-wide border-b border-slate-700 pb-2 flex justify-between items-center">
-          <span>📊 SLUTGILTIG EKONOMISK SAMMANFATTNING</span>
-          <span className="text-xs text-slate-400 font-mono">Index 2026</span>
-        </h2>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-3 text-xs font-mono">
-          <div><span className="text-slate-400">Totala schematimmar:</span> <span className="font-bold text-sm">{totals.h.toFixed(2)} h</span></div>
-          <div><span className="text-slate-400">Faktiskt arbetade timmar efter sjukdom:</span> <span className="font-bold text-sm">{totals.workedHours.toFixed(2)} h</span></div>
-          <div><span className="text-slate-400">Ej fakturerade sjukfrånvarotimmar:</span> <span className="font-bold text-rose-300">{totals.safeSickHours.toFixed(2)} h</span></div>
-          <div><span className="text-slate-400">Förlorad kundintäkt vid sjukdom:</span> <span className="font-bold text-rose-300">-{fmt(totals.lostCustomerRevenue)} kr</span></div>
-          <div><span className="text-slate-400">Sjuklön efter karens:</span> <span className="font-bold text-amber-300">{fmt(totals.totalSjuklon)} kr</span></div>
-          <div><span className="text-slate-400">Regionalt vite / avbokningsvite:</span> <span className="font-bold text-rose-400">-{fmt(totals.totalVite)} kr</span> <span className="text-slate-500">({totals.safeViteHours.toFixed(2)} h)</span></div>
-          <div><span className="text-slate-400">Reseschabloner intäkt:</span> <span className="font-bold text-blue-400">+{fmt(totals.totalSchablonRevenue)} kr</span></div>
-          
-          <div className="border-t border-slate-700/50 my-1 col-span-full" />
-          
-          <div><span className="text-slate-400">Totala Bruttointäkter:</span> <span className="font-bold text-emerald-400 text-sm">{fmt(totals.revTotal)} kr</span></div>
-          <div><span className="text-slate-400">Bruttolön före löneväxling:</span> <span className="font-bold text-slate-100 text-sm">{fmt(totals.grossWageBeforeVaxling)} kr</span></div>
-          <div><span className="text-slate-400">Skattepliktig Bruttolön efter löneväxling:</span> <span className="font-bold text-amber-300 text-sm">{fmt(totals.bruttoLon)} kr</span></div>
-          <div><span className="text-slate-400">Sociala Avgifter (SA):</span> <span className="font-bold">{fmt(totals.sa)} kr</span></div>
-
-          {totals.totalBostadForman > 0 && (
-            <div className="col-span-full text-[11px] text-amber-200">
-              ℹ️ Medräknat dolt förmånsvärde för boende på {fmt(totals.totalBostadForman)} kr i underlaget för sociala avgifter.
-            </div>
-          )}
-
-          <div className="border-t border-slate-700/50 my-1 col-span-full" />
-
-          <div><span className="text-slate-400">Ordinarie pension upp till 52 125 kr (före löneväxling):</span> <span>{fmt(totals.pLow)} kr</span></div>
-          <div><span className="text-slate-400">Ordinarie pension över tröskeln (före löneväxling):</span> <span>{fmt(totals.pHigh)} kr</span></div>
-          <div><span className="text-slate-400">Löneväxling insatt (+6%):</span> <span className="text-emerald-400 font-bold">{fmt(totals.pensionVaxlingBonus)} kr</span></div>
-          <div><span className="text-slate-400">Särskild Löneskatt (Pension):</span> <span>{fmt(totals.sll)} kr</span></div>
-          <div><span className="text-slate-400">Faktisk boendehyra (utgift):</span> <span>{fmt(housingCost)} kr</span></div>
-          <div><span className="text-slate-400">Milersättning:</span> <span>{fmt(totals.travelCost)} kr ({mileageKm} mil × {fmt(mileageRate)} kr)</span></div>
-          <div><span className="text-slate-400">Max rekommenderad löneväxling i detta scenario:</span> <span className="font-bold text-emerald-400">{fmt(totals.maxRecommendedLonevaxling)} kr</span></div>
-          <div><span className="text-slate-400">Valt löneväxlingsbelopp:</span> <span className="font-bold text-emerald-400">{fmt(totals.appliedLonevaxling)} kr</span></div>
-          <div><span className="text-slate-400">TOTAL SJÄLVKOSTNAD BOLAGET:</span> <span className="font-bold text-sm text-rose-300">{fmt(totals.totalCost)} kr</span></div>
-        </div>
-
-        {lonevaxling > totals.maxRecommendedLonevaxling && (
-          <div className="text-[11px] text-amber-200 bg-amber-950/40 border border-amber-500/30 rounded-lg p-2">
-            Varning: vald löneväxling är högre än rekommenderat max i detta scenario. Kontrollera att bruttolönen efter löneväxling inte hamnar under 56 087 kr/mån.
-          </div>
-        )}
-
-        <div className="rounded-xl border border-emerald-500/30 bg-emerald-950/30 p-4 space-y-3">
+      {/* PEDAGOGISK SAMMANFATTNING TILL KONSULTEN */}
+      <div className="rounded-xl border border-emerald-500/30 bg-emerald-950/30 p-4 space-y-3">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 border-b border-emerald-500/20 pb-2">
             <h3 className="font-bold text-sm text-emerald-300">Pedagogisk sammanfattning till konsulten</h3>
             <span className="text-[11px] text-emerald-100/80">Visar vad konsulten får i lön, pension och skattefri milersättning i detta scenario.</span>
@@ -753,19 +722,56 @@ export default function App() {
           </div>
         </div>
 
+      {/* EKONOMISK SAMMANFATTNING */}
+      <section className="rounded-xl border p-4 bg-slate-800 text-white shadow-lg space-y-4">
+        <h2 className="font-bold text-base tracking-wide border-b border-slate-700 pb-2 flex justify-between items-center">
+          <span>📊 SLUTGILTIG EKONOMISK SAMMANFATTNING</span>
+          <span className="text-xs text-slate-400 font-mono">Index 2026</span>
+        </h2>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-3 text-xs font-mono">
+          <div><span className="text-slate-400">Totala schematimmar:</span> <span className="font-bold text-sm">{totals.h.toFixed(2)} h</span></div>
+          <div><span className="text-slate-400">Faktiskt arbetade timmar efter sjukdom:</span> <span className="font-bold text-sm">{totals.workedHours.toFixed(2)} h</span></div>
+          <div><span className="text-slate-400">Ej fakturerade sjukfrånvarotimmar:</span> <span className="font-bold text-rose-300">{totals.safeSickHours.toFixed(2)} h</span></div>
+          <div><span className="text-slate-400">Förlorad kundintäkt vid sjukdom:</span> <span className="font-bold text-rose-300">-{fmt(totals.lostCustomerRevenue)} kr</span></div>
+          <div><span className="text-slate-400">Sjuklön efter karens:</span> <span className="font-bold text-amber-300">{fmt(totals.totalSjuklon)} kr</span></div>
+          <div><span className="text-slate-400">Regionalt vite / avbokningsvite:</span> <span className="font-bold text-rose-400">-{fmt(totals.totalVite)} kr</span> <span className="text-slate-500">({totals.safeViteHours.toFixed(2)} h)</span></div>
+          <div><span className="text-slate-400">Reseschabloner intäkt:</span> <span className="font-bold text-blue-400">+{fmt(totals.totalSchablonRevenue)} kr</span></div>
+          
+          <div className="border-t border-slate-700/50 my-1 col-span-full" />
+          
+          <div><span className="text-slate-400">Totala Bruttointäkter:</span> <span className="font-bold text-emerald-400 text-sm">{fmt(totals.revTotal)} kr</span></div>
+          <div><span className="text-slate-400">Bruttolön före löneväxling:</span> <span className="font-bold text-slate-100 text-sm">{fmt(totals.grossWageBeforeVaxling)} kr</span></div>
+          <div><span className="text-slate-400">Skattepliktig Bruttolön efter löneväxling:</span> <span className="font-bold text-amber-300 text-sm">{fmt(totals.bruttoLon)} kr</span></div>
+          <div><span className="text-slate-400">Sociala Avgifter (SA):</span> <span className="font-bold">{fmt(totals.sa)} kr</span></div>
+
+          {totals.totalBostadForman > 0 && (
+            <div className="col-span-full text-[11px] text-amber-200">
+              ℹ️ Medräknat dolt förmånsvärde för boende på {fmt(totals.totalBostadForman)} kr i underlaget för sociala avgifter.
+            </div>
+          )}
+
+          <div className="border-t border-slate-700/50 my-1 col-span-full" />
+
+          <div><span className="text-slate-400">Ordinarie pension upp till 52 125 kr (före löneväxling):</span> <span>{fmt(totals.pLow)} kr</span></div>
+          <div><span className="text-slate-400">Ordinarie pension över tröskeln (före löneväxling):</span> <span>{fmt(totals.pHigh)} kr</span></div>
+          <div><span className="text-slate-400">Löneväxling insatt (+6%):</span> <span className="text-emerald-400 font-bold">{fmt(totals.pensionVaxlingBonus)} kr</span></div>
+          <div><span className="text-slate-400">Särskild Löneskatt (Pension):</span> <span>{fmt(totals.sll)} kr</span></div>
+          <div><span className="text-slate-400">Faktisk boendehyra (utgift):</span> <span>{fmt(housingCost)} kr</span></div>
+          <div><span className="text-slate-400">Milersättning:</span> <span>{fmt(totals.travelCost)} kr ({mileageKm} mil × {fmt(mileageRate)} kr)</span></div>
+          <div><span className="text-slate-400">Max rekommenderad löneväxling i detta scenario:</span> <span className="font-bold text-emerald-400">{fmt(totals.maxRecommendedLonevaxling)} kr</span></div>
+          <div><span className="text-slate-400">Valt löneväxlingsbelopp:</span> <span className="font-bold text-emerald-400">{fmt(totals.appliedLonevaxling)} kr</span></div>
+          <div><span className="text-slate-400">TOTAL SJÄLVKOSTNAD BOLAGET:</span> <span className="font-bold text-sm text-rose-300">{fmt(totals.totalCost)} kr</span></div>
+        </div>
+
+        {lonevaxling > totals.maxRecommendedLonevaxling && (
+          <div className="text-[11px] text-amber-200 bg-amber-950/40 border border-amber-500/30 rounded-lg p-2">
+            Varning: vald löneväxling är högre än rekommenderat max i detta scenario. Kontrollera att bruttolönen efter löneväxling inte hamnar under 56 087 kr/mån.
+          </div>
+        )}
+
         <div className="pt-4 border-t border-slate-700 flex flex-wrap gap-4 items-center bg-slate-900/50 p-3 rounded-xl text-xs">
-          <label className="flex items-center gap-2">
-            <span className="text-slate-300">Antal mil</span>
-            <input type="number" className="w-20 rounded border border-slate-600 bg-slate-800 p-1 text-right font-bold text-white" value={mileageKm} onChange={(e) => setMileageKm(Math.max(0, +e.target.value || 0))} />
-          </label>
-          <label className="flex items-center gap-2">
-            <span className="text-slate-300">Kr/mil</span>
-            <input type="number" className="w-20 rounded border border-slate-600 bg-slate-800 p-1 text-right font-bold text-white" value={mileageRate} onChange={(e) => setMileageRate(Math.max(0, +e.target.value || 0))} />
-          </label>
-          <label className="flex items-center gap-2">
-            <span className="text-slate-300">Löneväxlingsbelopp (kr/månad)</span>
-            <input type="number" className="w-28 rounded border border-slate-600 bg-slate-800 p-1 text-right font-bold text-white" value={lonevaxling} onChange={(e) => setLonevaxling(Math.max(0, +e.target.value || 0))} />
-          </label>
+          <div className="w-full text-[11px] text-slate-400 uppercase tracking-wide">Interna TB-inställningar</div>
           <label className="flex items-center gap-2">
             <span className="text-slate-300">Konsultchef split %</span>
             <input type="number" className="w-16 rounded border border-slate-600 bg-slate-800 p-1 text-right font-bold text-white" value={tbSplitPct} onChange={(e) => setTbSplitPct(Math.max(0, Math.min(100, +e.target.value || 0)))} />
