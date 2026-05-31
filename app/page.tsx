@@ -179,7 +179,7 @@ export default function App() {
   const [housingCost, setHousingCost] = useState<number>(0);
   const [travelRevenue, setTravelRevenue] = useState<number>(0);
 
-  // Advanced States
+  // Advanced States fylls i live
   const [introHours, setIntroHours] = useState<number>(0);
   const [sickHours, setSickHours] = useState<number>(0);
   const [maxViteTak, setMaxViteTak] = useState<number>(40000);
@@ -216,11 +216,12 @@ export default function App() {
 
   useEffect(() => {
     if (priceModel !== "Region") return;
-    const z = zone === "1" ? "z1" : zone === "2" ? "z2" : "z3";
-    const next = BASE_PRICES_2026[spec][z];
+    const zKey = zone === "1" ? "z1" : zone === "2" ? "z2" : "z3";
+    const next = BASE_PRICES_2026[spec][zKey];
     setBasePrice(next);
   }, [zone, spec, year, priceModel]);
 
+  // Proportioneell rastavräkning baserat på passets faktiska OB-innehåll
   function parseScheduleText(text: string) {
     try {
       const lines = text.trim().split(/\r?\n/);
@@ -313,6 +314,7 @@ export default function App() {
     });
   }, [ROWS, obHours, obKund, obKonsult, basePrice, wage, socialRate]);
 
+  // Beräkningsmotorn
   const totals = useMemo(() => {
     let baseRev = 0, baseCost = 0, totalHours = 0;
     for (const r of rowsCalc) {
@@ -453,7 +455,7 @@ export default function App() {
         </label>
       </section>
 
-      {/* AVANCERADE KONTROLLER */}
+      {/* DET NYA SÄKRA KONTROLLBLOCKET */}
       <section className="grid grid-cols-1 md:grid-cols-3 gap-6 rounded-xl border p-4 bg-gradient-to-br from-slate-50 to-blue-50/30">
         <div className="space-y-4">
           <h3 className="font-bold text-sm text-slate-700 border-b pb-1">⚙️ Avrop & Löneväxling</h3>
@@ -513,8 +515,48 @@ export default function App() {
         </div>
       </section>
 
-      {/* Timmar & CSV block */}
+      {/* ALLA DINA JÄVLA ORGINAL-OB INPUTS PÅ RÄTT PLATS */}
       <section className="rounded-xl border p-4 grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <h2 className="font-semibold mb-2">OB enligt avtal (kund) – kr/h</h2>
+          <div className="space-y-2">
+            {ROWS.map((r) => {
+              const ro = r.key === "baseWD";
+              return (
+                <div key={r.key} className="flex items-center justify-between gap-2">
+                  <span className="text-sm w-56">{r.label}</span>
+                  <input
+                    type="number"
+                    className="w-28 text-right rounded-lg border p-1"
+                    value={ro ? basePrice : obKund[r.key]}
+                    readOnly={ro}
+                    disabled={ro}
+                    onChange={(e) => {
+                      if (ro) return;
+                      setObKund((o) => ({ ...o, [r.key]: +e.target.value || 0 }));
+                    }}
+                  />
+                </div>
+              );
+            })}
+          </div>
+
+          <h2 className="font-semibold mt-4 mb-2">OB – konsult</h2>
+          <div className="space-y-2">
+            {ROWS.map((r) => (
+              <div key={r.key} className="flex items-center justify-between gap-2">
+                <span className="text-sm w-56">{r.label}</span>
+                <input
+                  type="number"
+                  className="w-28 text-right rounded-lg border p-1"
+                  value={r.key === "baseWD" ? wage : obKonsult[r.key]}
+                  onChange={(e) => (r.key === "baseWD" ? setWage(+e.target.value || 0) : setObKonsult((o) => ({ ...o, [r.key]: +e.target.value || 0 })))}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+
         <div>
           <h2 className="font-semibold mb-2 text-sm text-slate-700">Inmatning av schematimmar</h2>
           <div className="space-y-1.5">
@@ -529,14 +571,14 @@ export default function App() {
             <input type="file" className="text-xs" accept=".csv" onChange={(e) => e.target.files?.[0] && handleCsvUpload(e.target.files[0])} />
             {uploadInfo && <span className="text-[10px] bg-slate-100 p-1 rounded font-mono text-slate-600">{uploadInfo}</span>}
           </div>
-        </div>
 
-        <div>
-          <label className="text-xs font-semibold text-slate-600 block mb-1">Klistra in råtext/CSV från schema</label>
-          <textarea className="w-full rounded-lg border p-2 text-[11px] h-24 font-mono" value={pasteText} onChange={(e) => setPasteText(e.target.value)} placeholder={`date,start,end,breakMin\n2026-02-02,06:45,16:30,30`} />
-          <div className="mt-1 flex gap-1.5">
-            <button className="rounded-lg border px-3 py-1 text-xs font-medium bg-slate-800 text-white hover:bg-slate-700" onClick={() => pasteText.trim() && parseScheduleText(pasteText)}>Tolka text</button>
-            <button className="rounded-lg border px-3 py-1 text-xs font-medium text-slate-600 hover:bg-slate-50" onClick={() => { setPasteText(""); setUploadInfo(null); }}>Rensa</button>
+          <div className="mt-3">
+            <label className="text-xs font-semibold text-slate-600 block mb-1">Klistra in råtext/CSV från schema</label>
+            <textarea className="w-full rounded-lg border p-2 text-[11px] h-24 font-mono" value={pasteText} onChange={(e) => setPasteText(e.target.value)} placeholder={`date,start,end,breakMin\n2026-02-02,06:45,16:30,30`} />
+            <div className="mt-1 flex gap-1.5">
+              <button className="rounded-lg border px-3 py-1 text-xs font-medium bg-slate-800 text-white hover:bg-slate-700" onClick={() => pasteText.trim() && parseScheduleText(pasteText)}>Tolka text</button>
+              <button className="rounded-lg border px-3 py-1 text-xs font-medium text-slate-600 hover:bg-slate-50" onClick={() => { setPasteText(""); setUploadInfo(null); }}>Rensa</button>
+            </div>
           </div>
 
           <div className="mt-2 rounded-lg border p-2 bg-slate-50 text-xs space-y-1.5">
