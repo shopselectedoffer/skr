@@ -179,19 +179,18 @@ export default function App() {
   const [housingCost, setHousingCost] = useState<number>(0);
   const [travelRevenue, setTravelRevenue] = useState<number>(0);
 
-  // ==========================================
-  // 🌟 NYA AVANCERADE STATES FÖR GULDSTANDARD
-  // ==========================================
+  // Advanced States fylls i live
   const [introHours, setIntroHours] = useState<number>(0);
   const [sickHours, setSickHours] = useState<number>(0);
+  // Karensavdrag styr hur många timmar som INTE får sjuklön.
+  // Ny sjukperiod: 8 h. Redan sjukdag 2 / karens redan dragen: 0 h.
+  const [karensHours, setKarensHours] = useState<number>(8);
   const [maxViteTak, setMaxViteTak] = useState<number>(40000);
   const [lonevaxling, setLonevaxling] = useState<number>(0);
   
-  // Reseschabloner
   const [schablonCount, setSchablonCount] = useState<number>(0);
   const [schablonAmount, setSchablonAmount] = useState<number>(3500);
 
-  // Förmånsbeskattning Boende
   const [bostadToggle, setBostadToggle] = useState<boolean>(false);
   const [bostadKvm, setBostadKvm] = useState<number>(25);
   const [bostadDygn, setBostadDygn] = useState<number>(0);
@@ -199,7 +198,7 @@ export default function App() {
   const [uploadInfo, setUploadInfo] = useState<string | null>(null);
   const [pasteText, setPasteText] = useState<string>("");
 
-  const [obKund] = useState<Record<Keys, number>>({ ...OB_KUND_2026 });
+  const [obKund, setObKund] = useState<Record<Keys, number>>({ ...OB_KUND_2026 });
   const [obKonsult, setObKonsult] = useState<Record<Keys, number>>({
     baseWD: 0, eveWD: 20, nightWD: 40, baseWE: 50, eveWE: 50, nightWE: 50, daySH: 100, nightSH: 150,
   });
@@ -220,11 +219,12 @@ export default function App() {
 
   useEffect(() => {
     if (priceModel !== "Region") return;
-    const z = zone === "1" ? "z1" : zone === "2" ? "z2" : "z3";
-    const next = BASE_PRICES_2026[spec][z];
+    const zKey = zone === "1" ? "z1" : zone === "2" ? "z2" : "z3";
+    const next = BASE_PRICES_2026[spec][zKey];
     setBasePrice(next);
   }, [zone, spec, year, priceModel]);
 
+  // Proportioneell rastavräkning baserat på passets faktiska OB-innehåll
   function parseScheduleText(text: string) {
     try {
       const lines = text.trim().split(/\r?\n/);
@@ -241,7 +241,7 @@ export default function App() {
         ["breakmin", "break", "breaktime", "breattime", "rast", "rastmin", "paus", "pause", "rest"].includes(c)
       );
 
-      if (iDate < 0 || iStart < 0 || iEnd < 0) throw new Error("CSV saknar kolumner");
+      if (iDate < 0 || iStart < 0 || iEnd < 0) throw new Error("CSV saknar rätt kolumner");
 
       let agg: Split = { baseWD: 0, eveWD: 0, nightWD: 0, baseWE: 0, eveWE: 0, nightWE: 0, daySH: 0, nightSH: 0 };
       let rows = 0;
@@ -256,13 +256,13 @@ export default function App() {
         if (!dISO || startM == null || endM == null) continue;
 
         let split = splitWithCalendar(dISO, startM, endM, year);
-        let restH = (breakMin || 0) / 60;
-        const order: Keys[] = ["baseWD", "eveWD", "nightWD", "baseWE", "eveWE", "nightWE", "daySH", "nightSH"];
-        for (const k of order) {
-          if (restH <= 0) break;
-          const take = Math.min(split[k], restH);
-          split[k] -= take;
-          restH -= take;
+        let passTotalMin = (endM <= startM ? endM + 1440 : endM) - startM;
+        
+        if (passTotalMin > 0 && breakMin > 0) {
+          const reduceringsFaktor = (passTotalMin - breakMin) / passTotalMin;
+          (Object.keys(split) as Keys[]).forEach((k) => {
+            split[k] *= reduceringsFaktor;
+          });
         }
 
         (Object.keys(split) as Keys[]).forEach((k) => (agg[k] += split[k]));
@@ -271,9 +271,9 @@ export default function App() {
 
       setObHours(agg);
       const totalH = Object.values(agg).reduce((a, b) => a + b, 0);
-      setUploadInfo(`Importerade ${rows} rader. Totalt: ${totalH.toFixed(2)} h`);
+      setUploadInfo(`Importerade ${rows} rader. Nettoarbetstid: ${totalH.toFixed(2)} h`);
     } catch (err: any) {
-      setUploadInfo(`Fel: ${err?.message || String(err)}`);
+      setUploadInfo("Fel: " + (err?.message || String(err)));
     }
   }
 
@@ -317,9 +317,7 @@ export default function App() {
     });
   }, [ROWS, obHours, obKund, obKonsult, basePrice, wage, socialRate]);
 
-  // ==========================================
-  // 🌟 SUPERMOTORN FÖR TOTALBERÄKNINGAR
-  // ==========================================
+  // Beräkningsmotorn
   const totals = useMemo(() => {
     let baseRev = 0, baseCost = 0, totalHours = 0;
     for (const r of rowsCalc) {
@@ -336,10 +334,10 @@ export default function App() {
     const calculatedVite = sickHours * hourlyViteRate;
     const totalVite = Math.min(maxViteTak, calculatedVite);
 
-    const activeWorkingHours = Math.max(0, totalHours - sickHours);
     const sickDeduction = sickHours * wage;
-    const sickPayHours = Math.max(0, sickHours - 8);
-    const totalSjuklon = sickPayHours * (wage * 0.8);
+    const appliedKarensHours = Math.min(Math.max(0, karensHours), sickHours);
+    const sickPayHours = Math.max(0, sickHours - appliedKarensHours);
+    const totalSjuklon = sickPayHours * (wage * 0.8); 
 
     const grossWageBeforeVaxling = baseCost - (sickHours === 0 ? 0 : (sickDeduction - totalSjuklon));
     const finalBruttoLon = Math.max(0, grossWageBeforeVaxling - lonevaxling);
@@ -362,7 +360,7 @@ export default function App() {
     const pLow = includePension ? pLowBase * 0.045 : 0;
     const pHigh = includePension ? pHighBase * (pensionHighPct / 100) : 0;
     
-    const pensionVaxlingBonus = lonevaxling * 1.06;
+    const pensionVaxlingBonus = lonevaxling * 1.06; 
     const pension = pLow + pHigh + pensionVaxlingBonus;
     const sll = pension * 0.2426; 
 
@@ -377,11 +375,9 @@ export default function App() {
     return {
       h: totalHours, rev: baseRev, revTotal, bruttoLon: finalBruttoLon, sa, pension,
       pLow, pHigh, sll, totalCost, tb, tbChef, tbPartner, turnoverFee, tbPartnerNet,
-      totalVite, totalBostadForman, pensionVaxlingBonus
+      totalVite, totalBostadForman, pensionVaxlingBonus, totalSchablonRevenue, sickPayHours, appliedKarensHours, totalSjuklon
     };
-  }, [rowsCalc, includePension, pensionHighPct, housingCost, travelRevenue, tbSplitPct, turnoverFeePct, introHours, sickHours, maxViteTak, lonevaxling, schablonCount, schablonAmount, bostadToggle, bostadKvm, bostadDygn, spec, wage, basePrice, socialRate]);
-
-  const totalSchablonRevenue = schablonCount * schablonAmount;
+  }, [rowsCalc, includePension, pensionHighPct, housingCost, travelRevenue, tbSplitPct, turnoverFeePct, introHours, sickHours, karensHours, maxViteTak, lonevaxling, schablonCount, schablonAmount, bostadToggle, bostadKvm, bostadDygn, spec, wage, basePrice, socialRate]);
 
   const fmt = (v: number) => new Intl.NumberFormat("sv-SE", { maximumFractionDigits: 0 }).format(Math.round(v || 0));
 
@@ -389,7 +385,7 @@ export default function App() {
     <div className="p-6 max-w-6xl mx-auto font-sans space-y-6 bg-white text-slate-900">
       <div className="flex justify-between items-center border-b pb-4">
         <h1 className="text-2xl font-bold text-slate-800">🌸 KLARA Master Offertsnurra Pro (2026)</h1>
-        <span className="bg-emerald-100 text-emerald-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">Sandbox-läge (/pro)</span>
+        <span className="bg-emerald-100 text-emerald-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">Guldstandard Live</span>
       </div>
 
       <div className="flex gap-2">
@@ -463,7 +459,7 @@ export default function App() {
         </label>
       </section>
 
-      {/* AVANCERADE REGELVERK */}
+      {/* DET NYA SÄKRA KONTROLLBLOCKET */}
       <section className="grid grid-cols-1 md:grid-cols-3 gap-6 rounded-xl border p-4 bg-gradient-to-br from-slate-50 to-blue-50/30">
         <div className="space-y-4">
           <h3 className="font-bold text-sm text-slate-700 border-b pb-1">⚙️ Avrop & Löneväxling</h3>
@@ -483,6 +479,13 @@ export default function App() {
             <span className="text-xs text-slate-600">Frånvarotimmar totalt (sjukdom)</span>
             <input type="number" className="rounded-lg border bg-white p-1.5 text-sm text-right text-rose-600 font-semibold" value={sickHours} onChange={(e) => setSickHours(Math.max(0, +e.target.value || 0))} />
           </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-xs text-slate-600">Karensavdrag timmar (8 = ny sjukperiod, 0 = sjukdag 2)</span>
+            <input type="number" className="rounded-lg border bg-white p-1.5 text-sm text-right text-amber-600 font-semibold" value={karensHours} onChange={(e) => setKarensHours(Math.max(0, +e.target.value || 0))} />
+          </label>
+          <div className="rounded-lg bg-white/70 border border-amber-100 p-2 text-[11px] text-slate-600">
+            Sjuklön i kalkylen: {totals.sickPayHours.toFixed(2)} h × 80 %. Karens: {totals.appliedKarensHours.toFixed(2)} h.
+          </div>
           <label className="flex flex-col gap-1">
             <span className="text-xs text-slate-600">Maximalt vites-tak hos regionen (kr)</span>
             <input type="number" className="rounded-lg border bg-white p-1.5 text-sm text-right" value={maxViteTak} onChange={(e) => setMaxViteTak(Math.max(0, +e.target.value || 0))} />
@@ -523,8 +526,48 @@ export default function App() {
         </div>
       </section>
 
-      {/* Timmar & CSV block */}
+      {/* ALLA DINA JÄVLA ORGINAL-OB INPUTS PÅ RÄTT PLATS */}
       <section className="rounded-xl border p-4 grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <h2 className="font-semibold mb-2">OB enligt avtal (kund) – kr/h</h2>
+          <div className="space-y-2">
+            {ROWS.map((r) => {
+              const ro = r.key === "baseWD";
+              return (
+                <div key={r.key} className="flex items-center justify-between gap-2">
+                  <span className="text-sm w-56">{r.label}</span>
+                  <input
+                    type="number"
+                    className="w-28 text-right rounded-lg border p-1"
+                    value={ro ? basePrice : obKund[r.key]}
+                    readOnly={ro}
+                    disabled={ro}
+                    onChange={(e) => {
+                      if (ro) return;
+                      setObKund((o) => ({ ...o, [r.key]: +e.target.value || 0 }));
+                    }}
+                  />
+                </div>
+              );
+            })}
+          </div>
+
+          <h2 className="font-semibold mt-4 mb-2">OB – konsult</h2>
+          <div className="space-y-2">
+            {ROWS.map((r) => (
+              <div key={r.key} className="flex items-center justify-between gap-2">
+                <span className="text-sm w-56">{r.label}</span>
+                <input
+                  type="number"
+                  className="w-28 text-right rounded-lg border p-1"
+                  value={r.key === "baseWD" ? wage : obKonsult[r.key]}
+                  onChange={(e) => (r.key === "baseWD" ? setWage(+e.target.value || 0) : setObKonsult((o) => ({ ...o, [r.key]: +e.target.value || 0 })))}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+
         <div>
           <h2 className="font-semibold mb-2 text-sm text-slate-700">Inmatning av schematimmar</h2>
           <div className="space-y-1.5">
@@ -539,14 +582,14 @@ export default function App() {
             <input type="file" className="text-xs" accept=".csv" onChange={(e) => e.target.files?.[0] && handleCsvUpload(e.target.files[0])} />
             {uploadInfo && <span className="text-[10px] bg-slate-100 p-1 rounded font-mono text-slate-600">{uploadInfo}</span>}
           </div>
-        </div>
 
-        <div>
-          <label className="text-xs font-semibold text-slate-600 block mb-1">Klistra in råtext/CSV från schema</label>
-          <textarea className="w-full rounded-lg border p-2 text-[11px] h-24 font-mono" value={pasteText} onChange={(e) => setPasteText(e.target.value)} placeholder={`date,start,end,breakMin\n2026-02-02,06:45,16:30,30`} />
-          <div className="mt-1 flex gap-1.5">
-            <button className="rounded-lg border px-3 py-1 text-xs font-medium bg-slate-800 text-white hover:bg-slate-700" onClick={() => pasteText.trim() && parseScheduleText(pasteText)}>Tolka text</button>
-            <button className="rounded-lg border px-3 py-1 text-xs font-medium text-slate-600 hover:bg-slate-50" onClick={() => { setPasteText(""); setUploadInfo(null); }}>Rensa</button>
+          <div className="mt-3">
+            <label className="text-xs font-semibold text-slate-600 block mb-1">Klistra in råtext/CSV från schema</label>
+            <textarea className="w-full rounded-lg border p-2 text-[11px] h-24 font-mono" value={pasteText} onChange={(e) => setPasteText(e.target.value)} placeholder={`date,start,end,breakMin\n2026-02-02,06:45,16:30,30`} />
+            <div className="mt-1 flex gap-1.5">
+              <button className="rounded-lg border px-3 py-1 text-xs font-medium bg-slate-800 text-white hover:bg-slate-700" onClick={() => pasteText.trim() && parseScheduleText(pasteText)}>Tolka text</button>
+              <button className="rounded-lg border px-3 py-1 text-xs font-medium text-slate-600 hover:bg-slate-50" onClick={() => { setPasteText(""); setUploadInfo(null); }}>Rensa</button>
+            </div>
           </div>
 
           <div className="mt-2 rounded-lg border p-2 bg-slate-50 text-xs space-y-1.5">
@@ -562,7 +605,7 @@ export default function App() {
         </div>
       </section>
 
-      {/* Tabellen för OB-fördelning */}
+      {/* Tabell */}
       <section className="rounded-xl border overflow-hidden">
         <table className="min-w-full text-xs">
           <thead>
@@ -594,7 +637,7 @@ export default function App() {
         </table>
       </section>
 
-      {/* DET AVANCERADE SUMMERINGSBLOCKET */}
+      {/* EKONOMISK SAMMANFATTNING */}
       <section className="rounded-xl border p-4 bg-slate-800 text-white shadow-lg space-y-4">
         <h2 className="font-bold text-base tracking-wide border-b border-slate-700 pb-2 flex justify-between items-center">
           <span>📊 SLUTGILTIG EKONOMISK SAMMANFATTNING</span>
@@ -604,17 +647,18 @@ export default function App() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-3 text-xs font-mono">
           <div><span className="text-slate-400">Totala schematimmar:</span> <span className="font-bold text-sm">{totals.h.toFixed(2)} h</span></div>
           <div><span className="text-slate-400">Regionalt Vite avdrag:</span> <span className="font-bold text-rose-400">-{fmt(totals.totalVite)} kr</span></div>
-          <div><span className="text-slate-400">Reseschabloner intäkt:</span> <span className="font-bold text-blue-400">+{fmt(totalSchablonRevenue)} kr</span></div>
+          <div><span className="text-slate-400">Reseschabloner intäkt:</span> <span className="font-bold text-blue-400">+{fmt(totals.totalSchablonRevenue)} kr</span></div>
           
           <div className="border-t border-slate-700/50 my-1 col-span-full" />
           
           <div><span className="text-slate-400">Totala Bruttointäkter:</span> <span className="font-bold text-emerald-400 text-sm">{fmt(totals.revTotal)} kr</span></div>
           <div><span className="text-slate-400">Skattepliktig Bruttolön:</span> <span className="font-bold text-amber-300 text-sm">{fmt(totals.bruttoLon)} kr</span></div>
+          <div><span className="text-slate-400">Sjuklön efter karens:</span> <span className="font-bold text-amber-200">{fmt(totals.totalSjuklon)} kr</span></div>
           <div><span className="text-slate-400">Sociala Avgifter (SA):</span> <span className="font-bold">{fmt(totals.sa)} kr</span></div>
 
           {totals.totalBostadForman > 0 && (
             <div className="col-span-full text-[11px] text-amber-200">
-              ℹ️ Medräknat dolt förmånsvärde för boende på {fmt(totals.totalBostadForman)} kr i underlaget for sociala avgifter.
+              ℹ️ Medräknat dolt förmånsvärde för boende på {fmt(totals.totalBostadForman)} kr i underlaget för sociala avgifter.
             </div>
           )}
 
@@ -625,7 +669,7 @@ export default function App() {
           <div><span className="text-slate-400">Löneväxling insatt (+6%):</span> <span className="text-emerald-400 font-bold">{fmt(totals.pensionVaxlingBonus)} kr</span></div>
           <div><span className="text-slate-400">Särskild Löneskatt (Pension):</span> <span>{fmt(totals.sll)} kr</span></div>
           <div><span className="text-slate-400">Faktisk boendehyra (utgift):</span> <span>{fmt(housingCost)} kr</span></div>
-          <div><span className="text-slate-400">TOTAL SELVKOSTNAD BOLAGET:</span> <span className="font-bold text-sm text-rose-300">{fmt(totals.totalCost)} kr</span></div>
+          <div><span className="text-slate-400">TOTAL SJÄLVKOSTNAD BOLAGET:</span> <span className="font-bold text-sm text-rose-300">{fmt(totals.totalCost)} kr</span></div>
         </div>
 
         <div className="pt-4 border-t border-slate-700 flex flex-wrap gap-4 items-center bg-slate-900/50 p-3 rounded-xl text-xs">
@@ -657,5 +701,3 @@ export default function App() {
     </div>
   );
 }
-
-
