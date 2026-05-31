@@ -2,7 +2,7 @@
 <html lang="sv">
 <head>
     <meta charset="UTF-8">
-    <title>Stensjö Vård AB — Master Offertsnurra V5 (Pro)</title>
+    <title>Stensjö Vård AB — Master Offertsnurra V5.1 (Pro)</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; background-color: #f8fafc; color: #0f172a; margin: 0; padding: 24px; line-height: 1.5; }
         .container { max-width: 1280px; margin: 0 auto; background: #ffffff; padding: 32px; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
@@ -49,7 +49,7 @@
         .btn-action { background-color: #1e3a8a; color: white; padding: 14px 24px; border: none; border-radius: 6px; font-weight: 700; cursor: pointer; width: 100%; font-size: 15px; display: block; text-align: center; margin-bottom: 15px; text-decoration: none; }
         .btn-action:hover { background-color: #172554; }
         
-        /* KLARAS NYA MOBILBRYTPUNKT (RESPONSIVITET) */
+        /* Mobilbrytpunkt */
         @media (max-width: 768px) {
             .grid { grid-template-columns: 1fr; }
             body { padding: 12px; }
@@ -73,4 +73,61 @@
 <div class="container">
     <div class="header">
         <h1>🌸 KLARA Master Offertsnurra Pro</h1>
-        <div
+        <div style="text-align: right; font-size: 13px; color: #64748b; font-weight: 500;">Sandbox-läge (/pro)</div>
+    </div>
+    
+    <div class="grid">
+        <div class="left-inputs">
+            
+            <div class="section">
+                <div class="section-title">1. Avtalsramar & Kundvillkor</div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Kundkategori</label>
+                        <select id="kund_kat">
+                            <option value="region" selected>Region (SKR-avtal 2026)</option>
+                            <option value="kommun">Kommun</option>
+                            <option value="privat">Privat</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Kompetensnivå</label>
+                        <select id="komp_niva">
+                            <option value="allman">Allmän SSK</option>
+                            <option value="spec">SSK Spec</option>
+                            <option value="ane_iva" selected>Spec ANE/IVA/OP/BM</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Baspris till kund (kr/tim)</label>
+                        <input type="number" id="base_kund" value="770" oninput="runCalculation()">
+                    </div>
+                    <div class="form-group">
+                        <label>Grundtimlön till konsult (kr/tim)</label>
+                        <input type="number" id="base_konsult" value="411" oninput="runCalculation()">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">2. Importerade schematimmar</div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Vardag dag (06–19)</label>
+                        <input type="number" id="h_vd" value="116" oninput="runCalculation()">
+                    </div>
+                    <div class="form-group">
+                        <label>Vardag kväll (19–22) (+20 kr/h OB)</label>
+                        <input type="number" id="h_vk" value="24" oninput="runCalculation()">
+                    </div>
+                    <div class="form-group">
+                        <label>Helg dag (06–19) (+50 kr/h OB)</label>
+                        <input type="number" id="h_hd" value="24" oninput="runCalculation()">
+                    </div>
+                    <div class="form-group">
+                        <label>Helg kväll (19–22) (+50 kr/h OB)</label>
+                        <input type="number" id="h_hk" value="12" oninput="runCalculation()">
+                    </div>
+                    <div class="form-group">
+                        <label>Vardag natt (22–06) (+40 kr/h OB)</label>
+                        <input
