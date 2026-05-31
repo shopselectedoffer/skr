@@ -150,7 +150,7 @@ function splitWithCalendar(dateISO: string, startMin: number, endMin: number, ye
 
 const BASE_PRICES_2026 = {
   "SSK": { z1: 616, z2: 660, z3: 715 },
-  "SSK Spec": { z1: 715, text: 770, z2: 770, z3: 824 },
+  "SSK Spec": { z1: 715, z2: 770, z3: 824 },
   "Spec ANE/IVA/OP/BM": { z1: 770, z2: 824, z3: 880 },
 } as const;
 
@@ -179,9 +179,7 @@ export default function App() {
   const [housingCost, setHousingCost] = useState<number>(0);
   const [travelRevenue, setTravelRevenue] = useState<number>(0);
 
-  // ==========================================
-  // SKARPA STATES FÖR AVANCERADE REGELVERK
-  // ==========================================
+  // Advanced States
   const [introHours, setIntroHours] = useState<number>(0);
   const [sickHours, setSickHours] = useState<number>(0);
   const [maxViteTak, setMaxViteTak] = useState<number>(40000);
@@ -219,11 +217,10 @@ export default function App() {
   useEffect(() => {
     if (priceModel !== "Region") return;
     const z = zone === "1" ? "z1" : zone === "2" ? "z2" : "z3";
-    const next = BASE_PRICES_2026[spec][z as "z1" | "z2" | "z3"];
-    if (next) setBasePrice(next);
+    const next = BASE_PRICES_2026[spec][z];
+    setBasePrice(next);
   }, [zone, spec, year, priceModel]);
 
-  // Proportioneell rastavräkning baserat på passets faktiska OB-innehåll
   function parseScheduleText(text: string) {
     try {
       const lines = text.trim().split(/\r?\n/);
@@ -272,7 +269,7 @@ export default function App() {
       const totalH = Object.values(agg).reduce((a, b) => a + b, 0);
       setUploadInfo(`Importerade ${rows} rader. Nettoarbetstid: ${totalH.toFixed(2)} h`);
     } catch (err: any) {
-      setUploadInfo(`Fel: ${err?.message || String(err)}`);
+      setUploadInfo("Fel: " + (err?.message || String(err)));
     }
   }
 
@@ -316,7 +313,6 @@ export default function App() {
     });
   }, [ROWS, obHours, obKund, obKonsult, basePrice, wage, socialRate]);
 
-  // Beräkningsmotorn
   const totals = useMemo(() => {
     let baseRev = 0, baseCost = 0, totalHours = 0;
     for (const r of rowsCalc) {
