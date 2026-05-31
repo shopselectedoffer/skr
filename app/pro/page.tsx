@@ -183,6 +183,7 @@ export default function App() {
   // Advanced States fylls i live
   const [introHours, setIntroHours] = useState<number>(0);
   const [sickHours, setSickHours] = useState<number>(0);
+  const [viteHours, setViteHours] = useState<number>(0);
   const [karensHours, setKarensHours] = useState<number>(8);
   const [maxViteTak, setMaxViteTak] = useState<number>(40000);
   const [lonevaxling, setLonevaxling] = useState<number>(0);
@@ -340,7 +341,8 @@ export default function App() {
 
     const isSpecialist = spec !== "SSK";
     const hourlyViteRate = isSpecialist ? 1000 : 625; 
-    const calculatedVite = safeSickHours * hourlyViteRate;
+    const safeViteHours = Math.max(0, viteHours);
+    const calculatedVite = safeViteHours * hourlyViteRate;
     const totalVite = Math.min(maxViteTak, calculatedVite);
 
     const appliedKarensHours = Math.min(Math.max(0, karensHours), safeSickHours);
@@ -391,9 +393,9 @@ export default function App() {
       pLow, pHigh, ordinaryPension, sll, totalCost, tb, tbChef, tbPartner, turnoverFee, tbPartnerNet,
       totalVite, totalBostadForman, pensionVaxlingBonus, totalSchablonRevenue,
       grossWageBeforeVaxling, maxRecommendedLonevaxling, appliedLonevaxling, travelCost,
-      workedHours, safeSickHours, appliedKarensHours, sickPayHours, totalSjuklon, lostCustomerRevenue
+      workedHours, safeSickHours, safeViteHours, appliedKarensHours, sickPayHours, totalSjuklon, lostCustomerRevenue
     };
-  }, [rowsCalc, includePension, pensionHighPct, housingCost, mileageKm, mileageRate, tbSplitPct, turnoverFeePct, introHours, sickHours, karensHours, maxViteTak, lonevaxling, schablonCount, schablonAmount, bostadToggle, bostadKvm, bostadDygn, spec, wage, basePrice, socialRate]);
+  }, [rowsCalc, includePension, pensionHighPct, housingCost, mileageKm, mileageRate, tbSplitPct, turnoverFeePct, introHours, sickHours, viteHours, karensHours, maxViteTak, lonevaxling, schablonCount, schablonAmount, bostadToggle, bostadKvm, bostadDygn, spec, wage, basePrice, socialRate]);
 
   const fmt = (v: number) => new Intl.NumberFormat("sv-SE", { maximumFractionDigits: 0 }).format(Math.round(v || 0));
 
@@ -488,7 +490,7 @@ export default function App() {
         <div className="space-y-4 border-x px-4">
           <h3 className="font-bold text-sm text-slate-700 border-b pb-1">🚨 Sjukdom & Vitesrisk</h3>
           <label className="flex flex-col gap-1">
-            <span className="text-xs text-slate-600">Frånvarotimmar totalt (sjukdom)</span>
+            <span className="text-xs text-slate-600">Sjukfrånvarotimmar (påverkar intäkt + sjuklön)</span>
             <input type="number" className="rounded-lg border bg-white p-1.5 text-sm text-right text-rose-600 font-semibold" value={sickHours} onChange={(e) => setSickHours(Math.max(0, +e.target.value || 0))} />
           </label>
           <label className="flex flex-col gap-1">
@@ -497,6 +499,13 @@ export default function App() {
           </label>
           <div className="text-[11px] text-slate-500 bg-white/70 rounded-lg border border-slate-200 p-2">
             Sjuklön: {totals.sickPayHours.toFixed(2)} h × 80 %. Karens: {totals.appliedKarensHours.toFixed(2)} h. Ingen kundintäkt på sjukfrånvarotimmar.
+          </div>
+          <label className="flex flex-col gap-1">
+            <span className="text-xs text-slate-600">Vitetimmar / avbokade timmar (påverkar endast vite)</span>
+            <input type="number" className="rounded-lg border bg-white p-1.5 text-sm text-right text-orange-600 font-semibold" value={viteHours} onChange={(e) => setViteHours(Math.max(0, +e.target.value || 0))} />
+          </label>
+          <div className="text-[11px] text-slate-500 bg-orange-50 rounded-lg border border-orange-100 p-2">
+            Vite är separat från sjukdom. Använd detta även om konsulten inte är sjuk men uppdraget avbokas/sanktioneras.
           </div>
           <label className="flex flex-col gap-1">
             <span className="text-xs text-slate-600">Maximalt vites-tak hos regionen (kr)</span>
@@ -659,7 +668,7 @@ export default function App() {
           <div><span className="text-slate-400">Ej fakturerade sjukfrånvarotimmar:</span> <span className="font-bold text-rose-300">{totals.safeSickHours.toFixed(2)} h</span></div>
           <div><span className="text-slate-400">Förlorad kundintäkt vid sjukdom:</span> <span className="font-bold text-rose-300">-{fmt(totals.lostCustomerRevenue)} kr</span></div>
           <div><span className="text-slate-400">Sjuklön efter karens:</span> <span className="font-bold text-amber-300">{fmt(totals.totalSjuklon)} kr</span></div>
-          <div><span className="text-slate-400">Regionalt Vite avdrag:</span> <span className="font-bold text-rose-400">-{fmt(totals.totalVite)} kr</span></div>
+          <div><span className="text-slate-400">Regionalt vite / avbokningsvite:</span> <span className="font-bold text-rose-400">-{fmt(totals.totalVite)} kr</span> <span className="text-slate-500">({totals.safeViteHours.toFixed(2)} h)</span></div>
           <div><span className="text-slate-400">Reseschabloner intäkt:</span> <span className="font-bold text-blue-400">+{fmt(totals.totalSchablonRevenue)} kr</span></div>
           
           <div className="border-t border-slate-700/50 my-1 col-span-full" />
@@ -740,7 +749,7 @@ export default function App() {
           </div>
 
           <div className="text-[11px] leading-relaxed text-emerald-50/90 bg-slate-950/40 border border-slate-700 rounded-lg p-3">
-            Förklaring: konsulten får kontant bruttolön efter eventuell löneväxling, skattefri milersättning separat och pensionsavsättning via både ordinarie tjänstepension och löneväxling. Vid sjukdom räknar kalkylen bort kundintäkt och ordinarie lön för frånvarotimmarna, lägger till sjuklön efter karens enligt 80 %-regeln och belastar dessutom eventuellt regionvite.
+            Förklaring: konsulten får kontant bruttolön efter eventuell löneväxling, skattefri milersättning separat och pensionsavsättning via både ordinarie tjänstepension och löneväxling. Vid sjukdom räknar kalkylen bort kundintäkt och ordinarie lön för sjukfrånvarotimmarna samt lägger till sjuklön efter karens enligt 80 %-regeln. Vite/avbokning är en separat post och styrs av fältet Vitetimmar.
           </div>
         </div>
 
