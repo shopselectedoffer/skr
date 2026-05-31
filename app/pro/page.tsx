@@ -485,7 +485,7 @@ export default function App() {
       <section className="grid grid-cols-1 md:grid-cols-3 gap-6 rounded-xl border p-4 bg-gradient-to-br from-slate-50 to-blue-50/30">
         <div className="md:col-span-3 border-b border-slate-200 pb-2">
           <h2 className="font-bold text-base text-slate-800">⚙️ Justeringar, risker & tillägg</h2>
-          <p className="text-xs text-slate-500 mt-1">Här fyller du i sådant som påverkar affären: intro, sjukdom, vite/avbokning, resor, boende, schabloner och löneväxling. Utfallet visas pedagogiskt längre ner.</p>
+          <p className="text-xs text-slate-500 mt-1">Fyll i avvikelser och tillägg. Utfallet visas längre ner.</p>
         </div>
         <div className="space-y-4">
           <h3 className="font-bold text-sm text-slate-700 border-b pb-1">🧾 Arbetstid & intro</h3>
@@ -494,14 +494,14 @@ export default function App() {
             <input type="number" className="rounded-lg border bg-white p-1.5 text-sm text-right" value={introHours} onChange={(e) => setIntroHours(Math.max(0, +e.target.value || 0))} />
           </label>
           <div className="text-[11px] text-slate-500 bg-white/70 rounded-lg border border-slate-200 p-2">
-            Löneväxlingen fylls i längre ner, där du samtidigt ser max rekommenderat belopp och effekten på konsultens erbjudande och bolagets kalkyl.
+            Löneväxling fylls i längre ner vid kalkylutfallet.
           </div>
         </div>
 
         <div className="space-y-4 border-x px-4">
           <h3 className="font-bold text-sm text-slate-700 border-b pb-1">🚨 Sjukdom separat från vite/avbokning</h3>
           <label className="flex flex-col gap-1">
-            <span className="text-xs text-slate-600">Sjukfrånvarotimmar (påverkar intäkt + sjuklön)</span>
+            <span className="text-xs text-slate-600">Sjukfrånvaro (timmar)</span>
             <input type="number" className="rounded-lg border bg-white p-1.5 text-sm text-right text-rose-600 font-semibold" value={sickHours} onChange={(e) => setSickHours(Math.max(0, +e.target.value || 0))} />
           </label>
           <label className="flex flex-col gap-1">
@@ -509,17 +509,17 @@ export default function App() {
             <input type="number" className="rounded-lg border bg-white p-1.5 text-sm text-right" value={karensHours} onChange={(e) => setKarensHours(Math.max(0, +e.target.value || 0))} />
           </label>
           <div className="text-[11px] text-slate-500 bg-white/70 rounded-lg border border-slate-200 p-2">
-            Sjuklön: {totals.sickPayHours.toFixed(2)} h × 80 %. Karens: {totals.appliedKarensHours.toFixed(2)} h. Ingen kundintäkt på sjukfrånvarotimmar.
+            Sjuklön: {totals.sickPayHours.toFixed(2)} h × 80 %. Karens: {totals.appliedKarensHours.toFixed(2)} h.
           </div>
           <label className="flex flex-col gap-1">
-            <span className="text-xs text-slate-600">Vitetimmar / avbokade timmar (påverkar endast vite)</span>
+            <span className="text-xs text-slate-600">Vitetimmar / avbokning</span>
             <input type="number" className="rounded-lg border bg-white p-1.5 text-sm text-right text-orange-600 font-semibold" value={viteHours} onChange={(e) => setViteHours(Math.max(0, +e.target.value || 0))} />
           </label>
           <div className="text-[11px] text-slate-500 bg-orange-50 rounded-lg border border-orange-100 p-2">
-            Vite är separat från sjukdom. Använd detta även om konsulten inte är sjuk men uppdraget avbokas/sanktioneras.
+            Separat från sjukdom. Använd vid avbokning/sanktion.
           </div>
           <div className="text-[11px] text-slate-500 bg-white/70 rounded-lg border border-slate-200 p-2">
-            Vitetak i kalkylen: {fmt(VITE_CAP_KR)} kr. Vid specialist beräknas vite som 1 000 kr/tim upp till taket, vilket motsvarar max vid 40 h frånvaro/avbokning.
+            Vitetak: {fmt(VITE_CAP_KR)} kr (dolt tak i kalkylen).
           </div>
         </div>
 
@@ -539,11 +539,11 @@ export default function App() {
               <input type="number" className="rounded-lg border bg-white p-1.5 text-sm text-right" value={housingCost} onChange={(e) => setHousingCost(Math.max(0, +e.target.value || 0))} />
             </label>
             <label className="flex flex-col gap-1">
-              <span className="text-xs text-slate-600">Övrig resekostnad/tåg (utgift)</span>
+              <span className="text-xs text-slate-600">Övrig resa/tåg (utgift)</span>
               <input type="number" className="rounded-lg border bg-white p-1.5 text-sm text-right" value={otherTravelCost} onChange={(e) => setOtherTravelCost(Math.max(0, +e.target.value || 0))} />
             </label>
             <label className="flex flex-col gap-1">
-              <span className="text-xs text-slate-600">SITHS-kort / behörighetskostnad (utgift)</span>
+              <span className="text-xs text-slate-600">SITHS/behörighet (utgift)</span>
               <input type="number" className="rounded-lg border bg-white p-1.5 text-sm text-right" value={sithsCost} onChange={(e) => setSithsCost(Math.max(0, +e.target.value || 0))} />
             </label>
             <label className="flex flex-col gap-1">
@@ -681,17 +681,17 @@ export default function App() {
       {/* PEDAGOGISK SAMMANFATTNING TILL KONSULTEN */}
       <div className="rounded-xl border border-emerald-500/30 bg-emerald-950/30 p-4 space-y-3">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 border-b border-emerald-500/20 pb-2">
-            <h3 className="font-bold text-sm text-emerald-300">Pedagogisk sammanfattning till konsulten</h3>
-            <span className="text-[11px] text-emerald-100/80">Visar vad konsulten får i lön, pension och skattefri milersättning i detta scenario.</span>
+            <h3 className="font-bold text-sm text-emerald-300">Sammanfattning till konsulten</h3>
+            <span className="text-[11px] text-emerald-100/80">Lön, pension och skattefri milersättning i detta scenario.</span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 text-xs font-mono">
             <div className="rounded-lg bg-slate-900/60 p-3 border border-slate-700">
-              <div className="text-slate-400">Bruttolön efter sjuk/intro, före löneväxling</div>
+              <div className="text-slate-400">Bruttolön före växling</div>
               <div className="text-lg font-bold text-white">{fmt(totals.grossWageBeforeVaxling)} kr</div>
             </div>
             <div className="rounded-lg bg-slate-900/60 p-3 border border-slate-700">
-              <div className="text-slate-400">Kontant bruttolön efter löneväxling</div>
+              <div className="text-slate-400">Kontant bruttolön</div>
               <div className="text-lg font-bold text-amber-300">{fmt(totals.bruttoLon)} kr</div>
             </div>
             <div className="rounded-lg bg-slate-900/60 p-3 border border-slate-700">
@@ -700,7 +700,7 @@ export default function App() {
               <div className="text-[10px] text-slate-500">{mileageKm} mil × {fmt(mileageRate)} kr/mil</div>
             </div>
             <div className="rounded-lg bg-slate-900/60 p-3 border border-slate-700">
-              <div className="text-slate-400">Extra pension via löneväxling</div>
+              <div className="text-slate-400">Extra pension (växling)</div>
               <div className="text-lg font-bold text-emerald-300">{fmt(totals.pensionVaxlingBonus)} kr</div>
               <div className="text-[10px] text-slate-500">Valt belopp × 1,06</div>
             </div>
@@ -710,22 +710,22 @@ export default function App() {
             <div className="rounded-lg bg-slate-900/60 p-3 border border-slate-700">
               <div className="text-slate-400">Ordinarie tjänstepension</div>
               <div className="text-base font-bold text-white">{fmt(totals.ordinaryPension)} kr</div>
-              <div className="text-[10px] text-slate-500">Beräknad på bruttolön före löneväxling</div>
+              <div className="text-[10px] text-slate-500">På lön före växling</div>
             </div>
             <div className="rounded-lg bg-slate-900/60 p-3 border border-slate-700">
               <div className="text-slate-400">Total pensionsavsättning</div>
               <div className="text-base font-bold text-emerald-300">{fmt(totals.pension)} kr</div>
-              <div className="text-[10px] text-slate-500">Ordinarie pension + löneväxling</div>
+              <div className="text-[10px] text-slate-500">Ordinarie + extra pension</div>
             </div>
             <div className="rounded-lg bg-slate-900/60 p-3 border border-slate-700">
               <div className="text-slate-400">Totalt värde före skatt</div>
               <div className="text-base font-bold text-indigo-300">{fmt(totals.bruttoLon + totals.mileageCost + totals.pension)} kr</div>
-              <div className="text-[10px] text-slate-500">Kontant bruttolön + milersättning + pension</div>
+              <div className="text-[10px] text-slate-500">Lön + milersättning + pension</div>
             </div>
           </div>
 
           <div className="text-[11px] leading-relaxed text-emerald-50/90 bg-slate-950/40 border border-slate-700 rounded-lg p-3">
-            Förklaring: konsulten får kontant bruttolön efter eventuell löneväxling, skattefri milersättning separat och pensionsavsättning via både ordinarie tjänstepension och löneväxling. Vid sjukdom räknar kalkylen bort kundintäkt och ordinarie lön för sjukfrånvarotimmarna samt lägger till sjuklön efter karens enligt 80 %-regeln. Vite/avbokning är en separat post och styrs av fältet Vitetimmar.
+            Konsultens erbjudande visas som lön, skattefri milersättning och pension. Sjukdom och vite påverkar bolagets kalkyl separat.
           </div>
         </div>
 
@@ -738,19 +738,19 @@ export default function App() {
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-3 text-xs font-mono">
           <div><span className="text-slate-400">Totala schematimmar:</span> <span className="font-bold text-sm">{totals.h.toFixed(2)} h</span></div>
-          <div><span className="text-slate-400">Faktiskt arbetade timmar efter sjukdom:</span> <span className="font-bold text-sm">{totals.workedHours.toFixed(2)} h</span></div>
-          <div><span className="text-slate-400">Ej fakturerade sjukfrånvarotimmar:</span> <span className="font-bold text-rose-300">{totals.safeSickHours.toFixed(2)} h</span></div>
-          <div><span className="text-slate-400">Förlorad kundintäkt vid sjukdom:</span> <span className="font-bold text-rose-300">-{fmt(totals.lostCustomerRevenue)} kr</span></div>
+          <div><span className="text-slate-400">Arbetade timmar:</span> <span className="font-bold text-sm">{totals.workedHours.toFixed(2)} h</span></div>
+          <div><span className="text-slate-400">Sjukfrånvaro (ej fakturerad):</span> <span className="font-bold text-rose-300">{totals.safeSickHours.toFixed(2)} h</span></div>
+          <div><span className="text-slate-400">Bortfall intäkt sjuk:</span> <span className="font-bold text-rose-300">-{fmt(totals.lostCustomerRevenue)} kr</span></div>
           <div><span className="text-slate-400">Sjuklön efter karens:</span> <span className="font-bold text-amber-300">{fmt(totals.totalSjuklon)} kr</span></div>
-          <div><span className="text-slate-400">Regionalt vite / avbokningsvite:</span> <span className="font-bold text-rose-400">-{fmt(totals.totalVite)} kr</span> <span className="text-slate-500">({totals.safeViteHours.toFixed(2)} h)</span></div>
+          <div><span className="text-slate-400">Vite/avbokning:</span> <span className="font-bold text-rose-400">-{fmt(totals.totalVite)} kr</span> <span className="text-slate-500">({totals.safeViteHours.toFixed(2)} h)</span></div>
           <div><span className="text-slate-400">Reseschabloner intäkt:</span> <span className="font-bold text-blue-400">+{fmt(totals.totalSchablonRevenue)} kr</span></div>
           
           <div className="border-t border-slate-700/50 my-1 col-span-full" />
           
-          <div><span className="text-slate-400">Totala Bruttointäkter:</span> <span className="font-bold text-emerald-400 text-sm">{fmt(totals.revTotal)} kr</span></div>
-          <div><span className="text-slate-400">Bruttolön efter sjuk/intro, före löneväxling:</span> <span className="font-bold text-slate-100 text-sm">{fmt(totals.grossWageBeforeVaxling)} kr</span></div>
-          <div><span className="text-slate-400">Skattepliktig Bruttolön efter löneväxling:</span> <span className="font-bold text-amber-300 text-sm">{fmt(totals.bruttoLon)} kr</span></div>
-          <div><span className="text-slate-400">Sociala Avgifter (SA):</span> <span className="font-bold">{fmt(totals.sa)} kr</span></div>
+          <div><span className="text-slate-400">Bruttointäkter:</span> <span className="font-bold text-emerald-400 text-sm">{fmt(totals.revTotal)} kr</span></div>
+          <div><span className="text-slate-400">Bruttolön före växling:</span> <span className="font-bold text-slate-100 text-sm">{fmt(totals.grossWageBeforeVaxling)} kr</span></div>
+          <div><span className="text-slate-400">Skattepliktig lön:</span> <span className="font-bold text-amber-300 text-sm">{fmt(totals.bruttoLon)} kr</span></div>
+          <div><span className="text-slate-400">Sociala avgifter:</span> <span className="font-bold">{fmt(totals.sa)} kr</span></div>
 
           {totals.totalBostadForman > 0 && (
             <div className="col-span-full text-[11px] text-amber-200">
@@ -760,17 +760,17 @@ export default function App() {
 
           <div className="border-t border-slate-700/50 my-1 col-span-full" />
 
-          <div><span className="text-slate-400">Ordinarie pension upp till 52 125 kr (före löneväxling):</span> <span>{fmt(totals.pLow)} kr</span></div>
-          <div><span className="text-slate-400">Ordinarie pension över tröskeln (före löneväxling):</span> <span>{fmt(totals.pHigh)} kr</span></div>
-          <div><span className="text-slate-400">Löneväxling insatt (+6%):</span> <span className="text-emerald-400 font-bold">{fmt(totals.pensionVaxlingBonus)} kr</span></div>
-          <div><span className="text-slate-400">Särskild Löneskatt (Pension):</span> <span>{fmt(totals.sll)} kr</span></div>
-          <div><span className="text-slate-400">Faktisk boendehyra (utgift):</span> <span>{fmt(housingCost)} kr</span></div>
+          <div><span className="text-slate-400">Pension 4,5 %:</span> <span>{fmt(totals.pLow)} kr</span></div>
+          <div><span className="text-slate-400">Pension 30 % över gräns:</span> <span>{fmt(totals.pHigh)} kr</span></div>
+          <div><span className="text-slate-400">Löneväxling +6 %:</span> <span className="text-emerald-400 font-bold">{fmt(totals.pensionVaxlingBonus)} kr</span></div>
+          <div><span className="text-slate-400">SLP pension:</span> <span>{fmt(totals.sll)} kr</span></div>
+          <div><span className="text-slate-400">Boende:</span> <span>{fmt(housingCost)} kr</span></div>
           <div><span className="text-slate-400">Milersättning:</span> <span>{fmt(totals.mileageCost)} kr ({mileageKm} mil × {fmt(mileageRate)} kr)</span></div>
-          <div><span className="text-slate-400">Övrig resekostnad/tåg:</span> <span>{fmt(totals.otherTravelCost)} kr</span></div>
-          <div><span className="text-slate-400">SITHS-kort / behörighetskostnad:</span> <span>{fmt(totals.sithsCost)} kr</span></div>
-          <div><span className="text-slate-400">Max rekommenderad löneväxling i detta scenario:</span> <span className="font-bold text-emerald-400">{fmt(totals.maxRecommendedLonevaxling)} kr</span></div>
-          <div><span className="text-slate-400">Valt löneväxlingsbelopp:</span> <span className="font-bold text-emerald-400">{fmt(totals.appliedLonevaxling)} kr</span></div>
-          <div><span className="text-slate-400">TOTAL SJÄLVKOSTNAD BOLAGET:</span> <span className="font-bold text-sm text-rose-300">{fmt(totals.totalCost)} kr</span></div>
+          <div><span className="text-slate-400">Övrig resa/tåg:</span> <span>{fmt(totals.otherTravelCost)} kr</span></div>
+          <div><span className="text-slate-400">SITHS/behörighet:</span> <span>{fmt(totals.sithsCost)} kr</span></div>
+          <div><span className="text-slate-400">Max rek. löneväxling:</span> <span className="font-bold text-emerald-400">{fmt(totals.maxRecommendedLonevaxling)} kr</span></div>
+          <div><span className="text-slate-400">Vald löneväxling:</span> <span className="font-bold text-emerald-400">{fmt(totals.appliedLonevaxling)} kr</span></div>
+          <div><span className="text-slate-400">SJÄLVKOSTNAD BOLAGET:</span> <span className="font-bold text-sm text-rose-300">{fmt(totals.totalCost)} kr</span></div>
         </div>
 
         {lonevaxling > totals.maxRecommendedLonevaxling && (
@@ -780,19 +780,19 @@ export default function App() {
         )}
 
         <div className="pt-4 border-t border-slate-700 bg-slate-900/50 p-3 rounded-xl text-xs space-y-3">
-          <div className="text-[11px] text-slate-400 uppercase tracking-wide">Löneväxling – justera och se utfallet direkt</div>
+          <div className="text-[11px] text-slate-400 uppercase tracking-wide">Löneväxling – justera här</div>
           <div className="flex flex-wrap gap-4 items-center">
             <label className="flex items-center gap-2">
               <span className="text-slate-300">Löneväxlingsbelopp (kr/månad)</span>
               <input type="number" className="w-28 rounded border border-slate-600 bg-slate-800 p-1 text-right font-bold text-white" value={lonevaxling} onChange={(e) => setLonevaxling(Math.max(0, +e.target.value || 0))} />
             </label>
-            <div className="text-slate-300">Max rekommenderad i detta scenario: <span className="font-bold text-emerald-400">{fmt(totals.maxRecommendedLonevaxling)} kr</span></div>
-            <div className="text-slate-300">Extra pension vid valt belopp: <span className="font-bold text-emerald-400">{fmt(totals.pensionVaxlingBonus)} kr</span></div>
+            <div className="text-slate-300">Max rek. i detta scenario: <span className="font-bold text-emerald-400">{fmt(totals.maxRecommendedLonevaxling)} kr</span></div>
+            <div className="text-slate-300">Extra pension: <span className="font-bold text-emerald-400">{fmt(totals.pensionVaxlingBonus)} kr</span></div>
           </div>
         </div>
 
         <div className="pt-4 border-t border-slate-700 flex flex-wrap gap-4 items-center bg-slate-900/50 p-3 rounded-xl text-xs">
-          <div className="w-full text-[11px] text-slate-400 uppercase tracking-wide">Interna TB-inställningar</div>
+          <div className="w-full text-[11px] text-slate-400 uppercase tracking-wide">TB-inställningar</div>
           <label className="flex items-center gap-2">
             <span className="text-slate-300">Konsultchef split %</span>
             <input type="number" className="w-16 rounded border border-slate-600 bg-slate-800 p-1 text-right font-bold text-white" value={tbSplitPct} onChange={(e) => setTbSplitPct(Math.max(0, Math.min(100, +e.target.value || 0)))} />
@@ -805,15 +805,15 @@ export default function App() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2 font-mono text-center">
           <div className="bg-emerald-950/80 border border-emerald-500/30 p-3 rounded-xl">
-            <div className="text-[10px] text-slate-400 uppercase tracking-wider">Täckningsbidrag (Vinst)</div>
+            <div className="text-[10px] text-slate-400 uppercase tracking-wider">Täckningsbidrag</div>
             <div className="text-xl font-bold text-emerald-400">{fmt(totals.tb)} kr</div>
           </div>
           <div className="bg-blue-950/80 border border-blue-500/30 p-3 rounded-xl">
-            <div className="text-[10px] text-slate-400 uppercase tracking-wider">Slutgiltig Marginal %</div>
+            <div className="text-[10px] text-slate-400 uppercase tracking-wider">Marginal</div>
             <div className="text-xl font-bold text-blue-400">{totals.revTotal > 0 ? ((totals.tb / totals.revTotal) * 100).toFixed(1) + "%" : "–"}</div>
           </div>
           <div className="bg-indigo-950/80 border border-indigo-500/30 p-3 rounded-xl">
-            <div className="text-[10px] text-slate-400 uppercase tracking-wider">Din Provision (Chefdel)</div>
+            <div className="text-[10px] text-slate-400 uppercase tracking-wider">Din provision</div>
             <div className="text-xl font-bold text-indigo-400">{fmt(totals.tbChef)} kr</div>
           </div>
         </div>
