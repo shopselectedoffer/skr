@@ -514,7 +514,7 @@ export default function App() {
         </div>
       </section>
 
-      {/* ALLA DINA JÄVLA ORGINAL-OB INPUTS PÅ RÄTT PLATS */}
+      {/* Ursprungliga OB-inputs */}
       <section className="rounded-xl border p-4 grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <h2 className="font-semibold mb-2">OB enligt avtal (kund) – kr/h</h2>
