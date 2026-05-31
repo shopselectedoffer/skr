@@ -381,6 +381,8 @@ export default function App() {
     };
   }, [rowsCalc, includePension, pensionHighPct, housingCost, travelRevenue, tbSplitPct, turnoverFeePct, introHours, sickHours, maxViteTak, lonevaxling, schablonCount, schablonAmount, bostadToggle, bostadKvm, bostadDygn, spec, wage, basePrice, socialRate]);
 
+  const totalSchablonRevenue = schablonCount * schablonAmount;
+
   const fmt = (v: number) => new Intl.NumberFormat("sv-SE", { maximumFractionDigits: 0 }).format(Math.round(v || 0));
 
   return (
