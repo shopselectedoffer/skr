@@ -40,7 +40,6 @@ function midsummerDay(year: number): Date {
   return new Date(Date.UTC(year, 5, 20));
 }
 
-// Lördagen under 31 okt – 6 nov
 function allSaintsDay(year: number): Date {
   for (let dd = 31; dd <= 31 + 6; dd++) {
     const month = dd <= 31 ? 9 : 10;
@@ -473,4 +472,213 @@ export default function App() {
             <input type="number" className="rounded-lg border bg-white p-1.5 text-sm text-right text-rose-600 font-semibold" value={sickHours} onChange={(e) => setSickHours(Math.max(0, +e.target.value || 0))} />
           </label>
           <label className="flex flex-col gap-1">
-            <span
+            <span className="text-xs text-slate-600">Maximalt vites-tak hos regionen (kr)</span>
+            <input type="number" className="rounded-lg border bg-white p-1.5 text-sm text-right" value={maxViteTak} onChange={(e) => setMaxViteTak(Math.max(0, +e.target.value || 0))} />
+          </label>
+        </div>
+
+        <div className="space-y-4">
+          <h3 className="font-bold text-sm text-slate-700 border-b pb-1">🗺️ Reseschablon & Bostadsförmån</h3>
+          <div className="grid grid-cols-2 gap-2">
+            <label className="flex flex-col gap-1">
+              <span className="text-xs text-slate-600">Reseschabloner (st)</span>
+              <input type="number" className="rounded-lg border bg-white p-1.5 text-sm text-right text-blue-600 font-semibold" value={schablonCount} onChange={(e) => setSchablonCount(Math.max(0, +e.target.value || 0))} />
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="text-xs text-slate-600">Belopp/st (Zon)</span>
+              <input type="number" className="rounded-lg border bg-white p-1.5 text-sm text-right" value={schablonAmount} onChange={(e) => setSchablonAmount(Math.max(0, +e.target.value || 0))} />
+            </label>
+          </div>
+
+          <div className="border-t pt-2 space-y-2">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" className="rounded border-slate-300" checked={bostadToggle} onChange={(e) => setBostadToggle(e.target.checked)} />
+              <span className="text-xs font-semibold text-slate-700">Aktivera Skatteverkets bostadsförmån</span>
+            </label>
+            {bostadToggle && (
+              <div className="grid grid-cols-2 gap-2 bg-white p-2 rounded-lg border border-slate-200">
+                <label className="flex flex-col gap-0.5">
+                  <span className="text-[10px] text-slate-500">Storlek (kvm)</span>
+                  <input type="number" className="border rounded p-1 text-xs text-right" value={bostadKvm} onChange={(e) => setBostadKvm(+e.target.value || 0)} />
+                </label>
+                <label className="flex flex-col gap-0.5">
+                  <span className="text-[10px] text-slate-500">Antal dygn</span>
+                  <input type="number" className="border rounded p-1 text-xs text-right" value={bostadDygn} onChange={(e) => setBostadDygn(+e.target.value || 0)} />
+                </label>
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+
+      <section className="rounded-xl border p-4 grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <h2 className="font-semibold mb-2">OB enligt avtal (kund) – kr/h</h2>
+          <div className="space-y-2">
+            {ROWS.map((r) => {
+              const ro = r.key === "baseWD";
+              return (
+                <div key={r.key} className="flex items-center justify-between gap-2">
+                  <span className="text-sm w-56">{r.label}</span>
+                  <input
+                    type="number"
+                    className="w-28 text-right rounded-lg border p-1"
+                    value={ro ? basePrice : obKund[r.key]}
+                    readOnly={ro}
+                    disabled={ro}
+                    onChange={(e) => {
+                      if (ro) return;
+                      setObKund((o) => ({ ...o, [r.key]: +e.target.value || 0 }));
+                    }}
+                  />
+                </div>
+              );
+            })}
+          </div>
+
+          <h2 className="font-semibold mt-4 mb-2">OB – konsult</h2>
+          <div className="space-y-2">
+            {ROWS.map((r) => (
+              <div key={r.key} className="flex items-center justify-between gap-2">
+                <span className="text-sm w-56">{r.label}</span>
+                <input
+                  type="number"
+                  className="w-28 text-right rounded-lg border p-1"
+                  value={r.key === "baseWD" ? wage : obKonsult[r.key]}
+                  onChange={(e) => (r.key === "baseWD" ? setWage(+e.target.value || 0) : setObKonsult((o) => ({ ...o, [r.key]: +e.target.value || 0 })))}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <h2 className="font-semibold mb-2 text-sm text-slate-700">Inmatning av schematimmar</h2>
+          <div className="space-y-1.5">
+            {ROWS.map((r) => (
+              <div key={r.key} className="flex items-center justify-between gap-2">
+                <span className="text-xs text-slate-600 w-56">{r.label}</span>
+                <input type="number" step="0.01" className="w-24 text-right rounded-lg border p-1 text-xs" value={obHours[r.key]} onChange={(e) => setObHours((o) => ({ ...o, [r.key]: +e.target.value || 0 }))} />
+              </div>
+            ))}
+          </div>
+          <div className="mt-3 flex items-center gap-2 border-t pt-2">
+            <input type="file" className="text-xs" accept=".csv" onChange={(e) => e.target.files?.[0] && handleCsvUpload(e.target.files[0])} />
+            {uploadInfo && <span className="text-[10px] bg-slate-100 p-1 rounded font-mono text-slate-600">{uploadInfo}</span>}
+          </div>
+
+          <div className="mt-3">
+            <label className="text-xs font-semibold text-slate-600 block mb-1">Klistra in råtext/CSV från schema</label>
+            <textarea className="w-full rounded-lg border p-2 text-[11px] h-24 font-mono" value={pasteText} onChange={(e) => setPasteText(e.target.value)} placeholder={`date,start,end,breakMin\n2026-02-02,06:45,16:30,30`} />
+            <div className="mt-1 flex gap-1.5">
+              <button className="rounded-lg border px-3 py-1 text-xs font-medium bg-slate-800 text-white hover:bg-slate-700" onClick={() => pasteText.trim() && parseScheduleText(pasteText)}>Tolka text</button>
+              <button className="rounded-lg border px-3 py-1 text-xs font-medium text-slate-600 hover:bg-slate-50" onClick={() => { setPasteText(""); setUploadInfo(null); }}>Rensa</button>
+            </div>
+          </div>
+
+          <div className="mt-2 rounded-lg border p-2 bg-slate-50 text-xs space-y-1.5">
+            <div className="flex items-center justify-between">
+              <span className="text-slate-600">Direkt hyra/boende (Stensjö-utgift, kr)</span>
+              <input type="number" className="w-24 text-right rounded border p-0.5 text-xs font-medium" value={housingCost} onChange={(e) => setHousingCost(+e.target.value || 0)} />
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-slate-600">Övriga resekostnader/tåg (utgift, kr)</span>
+              <input type="number" className="w-24 text-right rounded border p-0.5 text-xs font-medium" value={travelRevenue} onChange={(e) => setTravelRevenue(+e.target.value || 0)} />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="rounded-xl border overflow-hidden">
+        <table className="min-w-full text-xs">
+          <thead>
+            <tr className="bg-slate-800 text-white">
+              <th className="p-2 text-left">Kategori</th>
+              <th className="p-2 text-right">Timmar</th>
+              <th className="p-2 text-right">Kund kr/h</th>
+              <th className="p-2 text-right">Konsult kr/h</th>
+              <th className="p-2 text-right">Intäkt</th>
+              <th className="p-2 text-right">Kostnad</th>
+              <th className="p-2 text-right">TB (exkl pen)</th>
+              <th className="p-2 text-right">Rad %</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {rowsCalc.map((r) => (
+              <tr key={r.key} className="hover:bg-slate-50/50">
+                <td className="p-2 text-left font-medium text-slate-700">{r.label}</td>
+                <td className="p-2 text-right font-mono">{r.h.toFixed(2)}</td>
+                <td className="p-2 text-right font-mono">{Math.round(r.obKundDisplay)}</td>
+                <td className="p-2 text-right font-mono text-blue-600">{Math.round(r.obKonsultDisplay)}</td>
+                <td className="p-2 text-right font-mono">{fmt(r.rev)}</td>
+                <td className="p-2 text-right font-mono">{fmt(r.cost)}</td>
+                <td className="p-2 text-right font-mono text-slate-600">{fmt(r.tbInclSA)}</td>
+                <td className="p-2 text-right font-mono font-medium">{r.rev > 0 ? ((r.tbInclSA / r.rev) * 100).toFixed(1) + "%" : "–"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
+
+      <section className="rounded-xl border p-4 bg-slate-800 text-white shadow-lg space-y-4">
+        <h2 className="font-bold text-base tracking-wide border-b border-slate-700 pb-2 flex justify-between items-center">
+          <span>📊 SLUTGILTIG EKONOMISK SAMMANFATTNING</span>
+          <span className="text-xs text-slate-400 font-mono">Index 2026</span>
+        </h2>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-3 text-xs font-mono">
+          <div><span className="text-slate-400">Totala schematimmar:</span> <span className="font-bold text-sm">{totals.h.toFixed(2)} h</span></div>
+          <div><span className="text-slate-400">Regionalt Vite avdrag:</span> <span className="font-bold text-rose-400">-{fmt(totals.totalVite)} kr</span></div>
+          <div><span className="text-slate-400">Reseschabloner intäkt:</span> <span className="font-bold text-blue-400">+{fmt(totals.totalSchablonRevenue)} kr</span></div>
+          
+          <div className="border-t border-slate-700/50 my-1 col-span-full" />
+          
+          <div><span className="text-slate-400">Totala Bruttointäkter:</span> <span className="font-bold text-emerald-400 text-sm">{fmt(totals.revTotal)} kr</span></div>
+          <div><span className="text-slate-400">Skattepliktig Bruttolön:</span> <span className="font-bold text-amber-300 text-sm">{fmt(totals.bruttoLon)} kr</span></div>
+          <div><span className="text-slate-400">Sociala Avgifter (SA):</span> <span className="font-bold">{fmt(totals.sa)} kr</span></div>
+
+          {totals.totalBostadForman > 0 && (
+            <div className="col-span-full text-[11px] text-amber-200">
+              ℹ️ Medräknat dolt förmånsvärde för boende på {fmt(totals.totalBostadForman)} kr i underlaget för sociala avgifter.
+            </div>
+          )}
+
+          <div className="border-t border-slate-700/50 my-1 col-span-full" />
+
+          <div><span className="text-slate-400">Pension upp till 52 125 kr:</span> <span>{fmt(totals.pLow)} kr</span></div>
+          <div><span className="text-slate-400">Pension över tröskeln:</span> <span>{fmt(totals.pHigh)} kr</span></div>
+          <div><span className="text-slate-400">Löneväxling insatt (+6%):</span> <span className="text-emerald-400 font-bold">{fmt(totals.pensionVaxlingBonus)} kr</span></div>
+          <div><span className="text-slate-400">Särskild Löneskatt (Pension):</span> <span>{fmt(totals.sll)} kr</span></div>
+          <div><span className="text-slate-400">Faktisk boendehyra (utgift):</span> <span>{fmt(housingCost)} kr</span></div>
+          <div><span className="text-slate-400">TOTAL SJÄLVKOSTNAD BOLAGET:</span> <span className="font-bold text-sm text-rose-300">{fmt(totals.totalCost)} kr</span></div>
+        </div>
+
+        <div className="pt-4 border-t border-slate-700 flex flex-wrap gap-4 items-center bg-slate-900/50 p-3 rounded-xl text-xs">
+          <label className="flex items-center gap-2">
+            <span className="text-slate-300">Konsultchef split %</span>
+            <input type="number" className="w-16 rounded border border-slate-600 bg-slate-800 p-1 text-right font-bold text-white" value={tbSplitPct} onChange={(e) => setTbSplitPct(Math.max(0, Math.min(100, +e.target.value || 0)))} />
+          </label>
+          <label className="flex items-center gap-2">
+            <span className="text-slate-300">Omsättningsavgift %</span>
+            <input type="number" className="w-16 rounded border border-slate-600 bg-slate-800 p-1 text-right font-bold text-white" value={turnoverFeePct} onChange={(e) => setTurnoverFeePct(Math.max(0, +e.target.value || 0))} />
+          </label>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2 font-mono text-center">
+          <div className="bg-emerald-950/80 border border-emerald-500/30 p-3 rounded-xl">
+            <div className="text-[10px] text-slate-400 uppercase tracking-wider">Täckningsbidrag (Vinst)</div>
+            <div className="text-xl font-bold text-emerald-400">{fmt(totals.tb)} kr</div>
+          </div>
+          <div className="bg-blue-950/80 border border-blue-500/30 p-3 rounded-xl">
+            <div className="text-[10px] text-slate-400 uppercase tracking-wider">Slutgiltig Marginal %</div>
+            <div className="text-xl font-bold text-blue-400">{totals.revTotal > 0 ? ((totals.tb / totals.revTotal) * 100).toFixed(1) + "%" : "–"}</div>
+          </div>
+          <div className="bg-indigo-950/80 border border-indigo-500/30 p-3 rounded-xl">
+            <div className="text-[10px] text-slate-400 uppercase tracking-wider">Din Provision (Chefdel)</div>
+            <div className="text-xl font-bold text-indigo-400">{fmt(totals.tbChef)} kr</div>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
