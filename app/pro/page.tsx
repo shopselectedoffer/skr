@@ -633,7 +633,7 @@ export default function App() {
           </label>
           <label className="flex items-center gap-2">
             <span className="text-slate-300">Omsättningsavgift %</span>
-            <input type="number" className="w-16 rounded border border-slate-600 bg-slate-800 p-1 text-right font-bold text-white" value={turnoverFeePct} onChange={(e) => setTurnoverFeePct(Math.max(0, +e.target.value || 0)))} />
+            <input type="number" className="w-16 rounded border border-slate-600 bg-slate-800 p-1 text-right font-bold text-white" value={turnoverFeePct} onChange={(e) => setTurnoverFeePct(Math.max(0, +e.target.value || 0))} />
           </label>
         </div>
 
@@ -655,3 +655,4 @@ export default function App() {
     </div>
   );
 }
+
